@@ -18,11 +18,11 @@ bitrate = 10000;                            % Bitrate (Hz)
 sigAmp = 1;                                 % Amplitude of transmission bits (V)
 
 % Noise
-SNR = -10 : 0.1 : 10;                         % Signal-to-noise ratio
+SNR = 0 : 0.5 : 10;                         % Signal-to-noise ratio
 
 
 %% Signal source
-Nb = 16384;                                  % Number of sending bits
+Nb = 1024;                                  % Number of sending bits
 txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
@@ -71,7 +71,7 @@ end
 
 fprintf('---------- Environment Information ----------\n');
 % fprintf('SNR = %.2f dB\n', SNR);
-fprintf('Changing SNR\n');
+fprintf('Changing SNR');
 
 fprintf('----------- Transmission Settings -----------\n');
 fprintf('Bitrate = %d Hz\n', bitrate);
@@ -85,35 +85,17 @@ fprintf('Number of Bits = %d\n', Nb);
 %% Plot the Relationship between SNR and BER
 
 nSnr = SNR;
-nSnrUnit = 10.^(SNR / 10);
 
 figure(1)
-
-subplot(2, 1, 1);
-semilogy(nSnr, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
 hold on
-semilogy(nSnr, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
-title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in dB)", ...
-    "FontSize", 16);
+grid on
+box on
+semilogy(nSnr, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
+se(nSnr, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
+title("BER Characteristic of AWGN Channel with BPSK Modulation", "FontSize", 16);
 xlabel("SNR / dB", "FontSize", 16);
 ylabel("BER", "FontSize", 16);
-legend("Theoretical BER", "Actual BER", "Fontsize", 16);
-hold off
-grid on
-box on
-
-subplot(2, 1, 2);
-semilogy(nSnrUnit, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
-hold on
-semilogy(nSnrUnit, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
-title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in unit)", ...
-    "FontSize", 16);
-xlabel("SNR", "FontSize", 16);
-ylabel("BER", "FontSize", 16);
-legend("Theoretical BER", "Actual BER", "Fontsize", 16);
-hold off
-grid on
-box on
+axis([0 10 ])
 
 
 %% Plot for Comparison of Transimitted and Received Non-modulated Signal

@@ -37,12 +37,14 @@ txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 s
 txModSig = 2 * (0.5 - txSeq);
 
 
-%% Fading Channel
+%% Add Signal to Channel
+
+% Go through fading channel
 
 h0 = RayleighFadingChannel(Nw, fm, Nb, bitrate, t0, phiN);
-
-% Signal goes through channel
 txChanSig = txModSig .* h0;
+
+% Add noise
 rxChanSig = awgn(txChanSig, SNR, 'measured');
 noise = rxChanSig - txChanSig;
 sigPwr = sum(abs(txChanSig).^2) / Nb;
@@ -52,7 +54,8 @@ noiPwr = sum(abs(noise).^2) / Nb;
 
 %% Demodulate
 
-rxSeqTemp = rxChanSig ./ abs(rxChanSig);
+rxModSig = ;
+rxSeqTemp = rxModSig ./ abs(rxModSig);
 rxSeq = (1 - rxSeqTemp) / 2;
 
 
