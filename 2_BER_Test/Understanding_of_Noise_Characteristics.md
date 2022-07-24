@@ -109,4 +109,17 @@ $$
 $$
 Baseband shaping process makes no difference to BER-SNR characteristic because SNR only focuses on the signal bits that carries valid information.
 
+The theoretical BER is
+$$
+BER_{AWGN-BPSK} = Q \big( \sqrt{SNR}\ \big)
+$$
+
+
 #### 2.1.2	Rayleigh Fading Channel with BPSK Modulation
+
+Similarly, the transmission symbol is $x = \pm a$ and $P_S = a^2$.
+
+However, the channel coefficients are complex signals. So, the additive white gaussian noise should be complex, too. Its real and image part both obey gaussian distribution with power $\sigma^2$. Thus, the total noise power should be $2\sigma^2$. But the transmitted signal is in real form, so when we calculate $SNR$, we should only consider the in-phase component of gaussian noise.
+$$
+\sigma^2 = \frac{a^2}{SNR}\ (Watt)
+$$

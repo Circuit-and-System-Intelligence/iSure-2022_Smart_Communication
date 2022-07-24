@@ -5,7 +5,8 @@
 % Author:       Zhiyu Shen
 
 % Additional Description:
-%   No baseband shaping process
+%   Ignore large-scale fading and adopt Rayleigh fading channel
+%   Using Jakes Model to generate Rayleigh fading channel coefficients
 
 clc
 clear
@@ -17,8 +18,9 @@ close all
 % Define baseband parameters
 bitrate = 10000;                            % Bitrate (Hz)
 sigAmp = 1;                                 % Amplitude of transmission bits (V)
-Fs = bitrate;                               % Sampling rate (Hz)
+Fs = 1e6;                                   % Sampling rate (Hz)
 M = 2;                                      % Modulation order
+sps = Fs / (bitrate / log2(M));             % Samples per symbol
 Fsym = Fs / log2(M);                        % Equivalent sampling rate for symbols (Hz)
 
 % Define wireless communication environment parameters
@@ -28,11 +30,11 @@ fm = 50;                                    % Maximum doppler shift (Hz)
 t0 = 0;                                     % Initial time (s)
 phiN = 0;                                   % Initial phase of signal with maximum doppler shift (rad)
 % Noise
-SNR = 0 : 0.5 : 35;                       % Signal-to-noise ratio
+SNR = -10 : 0.5 : 35;                         % Signal-to-noise ratio
 
 
 %% Signal source
-Nb = 1000000;                                  % Number of sending bits
+Nb = 100000;                                % Number of sending bits
 txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
@@ -42,11 +44,30 @@ txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 s
 txModSig = 2 * (0.5 - txSeq) * sigAmp;
 
 
+%% Baseband Shaping
+
+% Upsampling (Interpolation)
+modLen = length(txModSig);                  % Fetch the length of modulated signal
+txSampZero = zeros(sps - 1, modLen);        % Zero vector added to original signal vector
+txSamTemp = [txModSig; txSampZero];         % Upsamling for each element of I signal vector
+txSamSig = reshape(txSamTemp, 1, modLen * sps);
+
+% Generate roll-off filter (Raising Cosine Filter)
+rolloffFactor = 0.5;                        % Roll-off factor
+rcosFir = rcosdesign(rolloffFactor, 6, sps, "sqrt");
+
+% Baseband shaping (Eliminate the impact of dalay)
+txFiltSigTemp = conv(txSamSig, rcosFir);
+txFilterHead = (length(rcosFir) - 1) / 2;
+txFiltSig = txFiltSigTemp(1, (txFilterHead + 1) : (length(txFiltSigTemp) - txFilterHead));
+txBbSig = txFiltSig;
+baseLen = length(txBbSig);
+
+
 %% Go through Rayleigh Fading Channel
 
-h0 = RayleighFadingChannel(Nw, fm, Nb, Fsym, t0, phiN);
-txChanSig = txModSig .* h0;
-
+h0 = RayleighFadingChannel(Nw, fm, baseLen, Fsym, t0, phiN);
+txChanSig = txBbSig .* h0;
 
 %% Add Noise
 
@@ -57,7 +78,7 @@ for i = 1 : length(SNR)
 
     % Generate gaussian white noise
     sigmaN = sqrt(sigAmp^2 / 10^(SNR(i) / 10));
-    chanNoise = sigmaN * randn(1, Nb) + 1i * sigmaN * randn(1, Nb);
+    chanNoise = sigmaN * randn(1, baseLen) + 1i * sigmaN * randn(1, baseLen);
 
     % Signal goes through channel and add noise
     rxChanSig = txChanSig + chanNoise;
@@ -65,8 +86,17 @@ for i = 1 : length(SNR)
     % Eliminate the effect of fading channel
     rxBbSig = real(rxChanSig ./ h0);
 
+    % Raise-cosine filter
+    rxFiltSigTemp = conv(rxBbSig, rcosFir);
+    rxFiltHead = (length(rcosFir) - 1) / 2;
+    rxFiltSig = rxFiltSigTemp(1, (rxFiltHead + 1) : (length(rxFiltSigTemp) - rxFiltHead));
+
+    % Sampling
+    rxSampSigTemp = reshape(rxFiltSig, sps, modLen);
+    rxSampSig = rxSampSigTemp(1, :);
+
     % Demodulate
-    rxSeqTemp = rxBbSig ./ abs(rxBbSig);
+    rxSeqTemp = rxSampSig ./ abs(rxSampSig);
     rxSeq = (1 - rxSeqTemp) / 2;
 
     % Calculate BER
