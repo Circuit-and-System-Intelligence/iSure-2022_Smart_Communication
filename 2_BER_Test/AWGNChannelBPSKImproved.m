@@ -23,7 +23,7 @@ SNR = -10 : 0.1 : 10;                       % Signal-to-noise ratio
 
 
 %% Signal source
-Nb = 8192;                                  % Number of sending bits
+Nb = 16384;                                 % Number of sending bits
 txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
@@ -97,7 +97,6 @@ end
 %% Print Transmission Information
 
 fprintf('---------- Environment Information ----------\n');
-% fprintf('SNR = %.2f dB\n', SNR);
 fprintf('Changing SNR\n');
 
 fprintf('----------- Transmission Settings -----------\n');
@@ -105,17 +104,15 @@ fprintf('Bitrate = %d Hz\n', bitrate);
 fprintf('Sampling rate = %d Hz\n', Fs);
 fprintf('Number of Bits = %d\n', Nb);
 
-% fprintf('------------ Transmission Result ------------\n');
-% fprintf('Theoretical BER = %f%%\n', theorBER * 100);
-% fprintf('Actual BER = %f%%\n', bitErrRate * 100);
-
 
 %% Plot the Relationship between SNR and BER
 
 nSnr = SNR;
 nSnrUnit = 10.^(SNR / 10);
 
-figure(1)
+figBer = figure(1);
+figBer.Name = 'BER Test for AWGN Channel wuth BPSK Modulation';
+figBer.WindowState = 'maximized';
 
 subplot(2, 1, 1);
 semilogy(nSnr, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");

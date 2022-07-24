@@ -18,11 +18,11 @@ bitrate = 10000;                            % Bitrate (Hz)
 sigAmp = 1;                                 % Amplitude of transmission bits (V)
 
 % Noise
-SNR = -10 : 0.1 : 10;                         % Signal-to-noise ratio
+SNR = -10 : 0.1 : 10;                       % Signal-to-noise ratio (dB)
 
 
 %% Signal source
-Nb = 16384;                                  % Number of sending bits
+Nb = 100000;                                % Number of sending bits
 txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
@@ -87,7 +87,9 @@ fprintf('Number of Bits = %d\n', Nb);
 nSnr = SNR;
 nSnrUnit = 10.^(SNR / 10);
 
-figure(1)
+figBer = figure(1);
+figBer.Name = 'BER Test for AWGN Channel wuth BPSK Modulation';
+figBer.WindowState = 'maximized';
 
 subplot(2, 1, 1);
 semilogy(nSnr, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");

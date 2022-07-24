@@ -30,7 +30,7 @@ fm = 50;                                    % Maximum doppler shift (Hz)
 t0 = 0;                                     % Initial time (s)
 phiN = 0;                                   % Initial phase of signal with maximum doppler shift (rad)
 % Noise
-SNR = -10 : 0.5 : 35;                         % Signal-to-noise ratio
+SNR = -10 : 0.5 : 35;                       % Signal-to-noise ratio
 
 
 %% Signal source
@@ -132,7 +132,9 @@ fprintf('Sampling rate = %d\n', Fs);
 nSnr = SNR;
 nSnrUnit = 10.^(SNR / 10);
 
-figure(1)
+figBer = figure(1);
+figBer.Name = 'BER Test for Rayleigh Fading Channel wuth BPSK Modulation';
+figBer.WindowState = 'maximized';
 
 subplot(2, 1, 1);
 semilogy(nSnr, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
