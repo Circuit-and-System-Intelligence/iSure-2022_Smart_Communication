@@ -19,7 +19,8 @@ M = 2;                                      % Modulation order
 sps = Fs / (bitrate / log2(M));             % Samples per symbol
 
 % Noise
-SNR = -10 : 0.1 : 10;                       % Signal-to-noise ratio
+Eb_N0 = 0 : 0.1 : 10;                       % Average bit energy to single-sided noise spectrum density (dB)
+SNR = 10 * log10(2 / Fs * bitrate) + Eb_N0; % Signal-to-noise ratio
 
 
 %% Signal source
@@ -62,10 +63,13 @@ for i = 1 : length(SNR)
 
     % Generate gaussian white noise
     sigmaN = sqrt(sigAmp^2 / 10^(SNR(i) / 10));
-    chanNoise = sigmaN * randn(1, baseLen);
+    chanNoise = sigmaN * (randn(1, baseLen) + 1i* randn(1, baseLen));
 
     % Signal goes through channel and add noise
-    rxBbSig = txBbSig + chanNoise;
+    rxChanSig = txBbSig + chanNoise;
+
+    % Receive signal
+    rxBbSig = real(rxChanSig);
 
     % Raise-cosine filter
     rxFiltSigTemp = conv(rxBbSig, rcosFir);
@@ -107,20 +111,20 @@ fprintf('Number of Bits = %d\n', Nb);
 
 %% Plot the Relationship between SNR and BER
 
-nSnr = SNR;
-nSnrUnit = 10.^(SNR / 10);
+nEbn0 = Eb_N0;
+nUnit = 10.^(Eb_N0 / 10);
 
 figBer = figure(1);
 figBer.Name = 'BER Test for AWGN Channel wuth BPSK Modulation';
 figBer.WindowState = 'maximized';
 
 subplot(2, 1, 1);
-semilogy(nSnr, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
+semilogy(nEbn0, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
 hold on
-semilogy(nSnr, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
+semilogy(nEbn0, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
 title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in dB)", ...
     "FontSize", 16);
-xlabel("SNR / dB", "FontSize", 16);
+xlabel("Eb/N0 / dB", "FontSize", 16);
 ylabel("BER", "FontSize", 16);
 legend("Theoretical BER", "Actual BER", "Fontsize", 16);
 hold off
@@ -128,12 +132,12 @@ grid on
 box on
 
 subplot(2, 1, 2);
-semilogy(nSnrUnit, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
+semilogy(nUnit, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
 hold on
-semilogy(nSnrUnit, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
+semilogy(nUnit, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
 title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in unit)", ...
     "FontSize", 16);
-xlabel("SNR", "FontSize", 16);
+xlabel("Eb/N0", "FontSize", 16);
 ylabel("BER", "FontSize", 16);
 legend("Theoretical BER", "Actual BER", "Fontsize", 16);
 hold off

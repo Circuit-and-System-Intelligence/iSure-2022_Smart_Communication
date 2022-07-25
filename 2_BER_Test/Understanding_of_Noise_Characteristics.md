@@ -124,7 +124,7 @@ Baseband shaping process makes no difference to BER-SNR characteristic because S
 
 The theoretical BER is
 $$
-BER_{AWGN-BPSK} = Q \big( \sqrt{SNR}\ \big) = Q \big( \sqrt{2\gamma_s}\ \big) = Q \big( \sqrt{2\gamma_b}\ \big)
+BER_{AWGN-BPSK} = Q \big( \sqrt{SNR}\ \big)
 $$
 
 #### 2.1.2	Rayleigh Fading Channel with BPSK Modulation
