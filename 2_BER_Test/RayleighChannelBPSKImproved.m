@@ -31,7 +31,7 @@ fm = 50;                                    % Maximum doppler shift (Hz)
 t0 = 0;                                     % Initial time (s)
 phiN = 0;                                   % Initial phase of signal with maximum doppler shift (rad)
 % Noise
-Eb_N0 = 0 : 0.5 : 20;                       % Average bit energy to single-sided noise spectrum power (dB)
+Eb_N0 = -10 : 0.5 : 30;                       % Average bit energy to single-sided noise spectrum power (dB)
 Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
 SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 
@@ -143,7 +143,7 @@ subplot(2, 1, 1);
 semilogy(nEbn0, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
 hold on
 semilogy(nEbn0, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
-title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in dB)", ...
+title("BER Characteristic of Rayleigh Channel with BPSK Modulation (SNR in dB)", ...
     "FontSize", 16);
 xlabel("Eb/N0 / dB", "FontSize", 16);
 ylabel("BER", "FontSize", 16);
@@ -156,7 +156,7 @@ subplot(2, 1, 2);
 semilogy(nUnit, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
 hold on
 semilogy(nUnit, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
-title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in unit)", ...
+title("BER Characteristic of Rayleigh Channel with BPSK Modulation (SNR in unit)", ...
     "FontSize", 16);
 xlabel("Eb/N0", "FontSize", 16);
 ylabel("BER", "FontSize", 16);

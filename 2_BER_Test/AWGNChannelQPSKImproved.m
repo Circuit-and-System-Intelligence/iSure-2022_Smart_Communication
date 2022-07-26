@@ -23,7 +23,7 @@ sps = Fs / Fsym;                            % Samples per symbol
 Feq= Fs / log2(M);                          % Equivalent sampling rate for symbols (Hz)
 
 % Noise
-Eb_N0 = 0 : 0.5 : 20;                       % Average bit energy to single-sided noise spectrum power (dB)
+Eb_N0 = 0 : 0.5 : 40;                       % Average bit energy to single-sided noise spectrum power (dB)
 Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
 SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 
