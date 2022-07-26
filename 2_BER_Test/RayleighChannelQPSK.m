@@ -1,7 +1,7 @@
 % Description:  Test Program for Rayleigh Fading Channel Model
 %               Adopt QPSK Modulation
 % Projet:       Channel Modeling - iSure 2022
-% Date:         July 22, 2022
+% Date:         July 25, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:

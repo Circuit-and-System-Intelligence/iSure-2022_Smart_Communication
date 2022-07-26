@@ -1,6 +1,6 @@
 % Description:  Test Program for AWGN Channel Model with QPSK Modulation
 % Projet:       Channel Modeling - iSure 2022
-% Date:         July 22, 2022
+% Date:         July 24, 2022
 % Author:       Zhiyu Shen
 
 % Description:
@@ -16,14 +16,20 @@ close all
 % Define baseband parameters
 bitrate = 10000;                            % Bitrate (Hz)
 sigAmp = 1;                                 % Amplitude of transmission bits (V)
+Fs = bitrate;                               % Sampling rate (Hz)
+M = 4;                                      % Modulation order
+Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
+sps = Fs / Fsym;                            % Samples per symbol
+Feq= Fs / log2(M);                          % Equivalent sampling rate for symbols (Hz)
 
 % Noise
-Eb_N0 = -10 : 0.1 : 10;                     % Average bit energy to single-sided noise spectrum power (dB)
-SNR = 10 * log10(2) + Eb_N0;                % Signal-to-noise ratio (dB)
+Eb_N0 = 0 : 0.1 : 10;                       % Average bit energy to single-sided noise spectrum power (dB)
+Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
+SNR = 10 * log10(2 * Fsym / Fs) + Es_N0;    % Signal-to-noise ratio (dB)
 
 
 %% Signal source
-Nb = 500000;                                % Number of sending bits
+Nb = 100000;                                % Number of sending bits
 txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
@@ -86,7 +92,7 @@ fprintf('Number of Bits = %d\n', Nb);
 %% Plot the Relationship between SNR and BER
 
 nEbn0 = Eb_N0;
-nSnrUnit = 10.^(SNR / 10);
+nUnit = 10.^(Eb_N0 / 10);
 
 figBer = figure(1);
 figBer.Name = 'BER Test for AWGN Channel wuth QPSK Modulation';
@@ -106,9 +112,9 @@ grid on
 box on
 
 subplot(2, 1, 2);
-semilogy(nSnrUnit/2, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
+semilogy(nUnit/2, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
 hold on
-semilogy(nSnrUnit/2, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
+semilogy(nUnit/2, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
 title("BER Characteristic of AWGN Channel with QPSK Modulation (Eb/N0 in unit)", ...
     "FontSize", 16);
 xlabel("Eb/N0", "FontSize", 16);

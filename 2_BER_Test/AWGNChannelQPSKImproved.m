@@ -1,6 +1,6 @@
 % Description:  Test Program for AWGN Channel Model with QPSK Modulation
 % Projet:       Channel Modeling - iSure 2022
-% Date:         July 22, 2022
+% Date:         July 24, 2022
 % Author:       Zhiyu Shen
 
 % Description:
@@ -18,15 +18,18 @@ bitrate = 10000;                            % Bitrate (Hz)
 sigAmp = 1;                                 % Amplitude of transmission bits (V)
 Fs = 1e6;                                   % Sampling rate (Hz)
 M = 4;                                      % Modulation order
-sps = Fs / (bitrate / log2(M));             % Samples per symbol
+Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
+sps = Fs / Fsym;                            % Samples per symbol
+Feq= Fs / log2(M);                          % Equivalent sampling rate for symbols (Hz)
 
 % Noise
-Eb_N0 = 0 : 0.5 : 30;                       % Average bit energy to single-sided noise spectrum power (dB)
-SNR = 10 * log10(2 / Fs * bitrate) + Eb_N0; % Signal-to-noise ratio (dB)
+Eb_N0 = 0 : 0.5 : 20;                       % Average bit energy to single-sided noise spectrum power (dB)
+Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
+SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 
 
 %% Signal source
-Nb = 500000;                                 % Number of sending bits
+Nb = 50000;                                 % Number of sending bits
 txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
@@ -74,7 +77,7 @@ theorBER = zeros(1, length(SNR));
 for i = 1 : length(SNR)
 
     % Generate gaussian white noise
-    sigmaN = sqrt(sigAmp^2 / 10^(SNR(i) / 10));
+    sigmaN = sqrt(2 * sigAmp^2 / 10^(SNR(i) / 10) / 2);
     chanNoise = sigmaN * (randn(1, baseLen) + 1i * randn(1, baseLen));
 
     % Signal goes through channel and add noise

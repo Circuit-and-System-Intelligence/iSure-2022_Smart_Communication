@@ -1,6 +1,6 @@
 # Understanding of Noise Characteristics
 
-## 1	Noise Indicators
+## 1	Noise Index
 
 ### 1.1	$$SNR$$
 
@@ -140,12 +140,12 @@ Similarly, the transmission symbol is $x = \pm a$ and $P_S = a^2$.
 
 However, the channel coefficients are complex signals. So, the additive white gaussian noise should be complex, too. Its real and image part both obey gaussian distribution with power $\sigma^2$. Thus, the total noise power should be $2\sigma^2$. But the transmitted signal is in real form, so when we calculate $SNR$, we should only consider the in-phase component of gaussian noise.
 $$
-\sigma^2 = \frac{a^2}{SNR}\ (Watt) \\ \\
+\sigma^2 = \frac{a^2}{2\ SNR}\ (Watt) \\ \\
 SNR = \frac{P_{S}}{P_{N_I}}
 $$
 The theoretical BER is
 $$
-BER_{Rayleigh-BPSK} \approx \frac{1}{2} \Bigg( 1 - \sqrt{\frac{SNR}{2+SNR}}\  \Bigg) = \frac{1}{2} \Bigg( 1 - \sqrt{\frac{\gamma_s}{1+\gamma_s}}\  \Bigg) = \frac{1}{2} \Bigg( 1 - \sqrt{\frac{\gamma_b}{1+\gamma_b}}\  \Bigg)
+BER_{Rayleigh-BPSK} \approx \frac{1}{2} \Bigg( 1 - \sqrt{\frac{SNR}{1+SNR}}\  \Bigg)
 $$
 
 ### 2.2	IQ Modulation
@@ -178,5 +178,5 @@ SNR = \frac{E_s}{N_0} = \gamma_s = 2\gamma_b
 $$
 Thus, the theoretical BER is
 $$
-BER_{AWGN-QPSK} = Q \big( \sqrt{SNR}\ \big) = Q \big( \sqrt{\gamma_s}\ \big) = Q \big( \sqrt{2\gamma_b}\ \big)
+BER_{AWGN-QPSK} = Q \big( \sqrt{SNR}\ \big)
 $$

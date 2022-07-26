@@ -19,7 +19,9 @@ bitrate = 10000;                            % Bitrate (Hz)
 sigAmp = 1;                                 % Amplitude of transmission bits (V)
 Fs = bitrate;                               % Sampling rate (Hz)
 M = 2;                                      % Modulation order
-Fsym = Fs / log2(M);                        % Equivalent sampling rate for symbols (Hz)
+Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
+sps = Fs / Fsym;                            % Samples per symbol
+Feq= Fs / log2(M);                          % Equivalent sampling rate for symbols (Hz)
 
 % Define wireless communication environment parameters
 % Small-Scale fading
@@ -28,11 +30,12 @@ fm = 50;                                    % Maximum doppler shift (Hz)
 t0 = 0;                                     % Initial time (s)
 phiN = 0;                                   % Initial phase of signal with maximum doppler shift (rad)
 % Noise
-SNR = 0 : 0.5 : 35;                         % Signal-to-noise ratio
+Eb_N0 = -10 : 0.1 : 20;                     % Average bit energy to single-sided noise spectrum power (dB)
+SNR = 10 * log10(2 / Fs * Fsym) + Eb_N0;    % Signal-to-noise ratio (dB)
 
 
 %% Signal source
-Nb = 1000000;                               % Number of sending bits
+Nb = 500000;                                % Number of sending bits
 txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
@@ -44,7 +47,7 @@ txModSig = 2 * (0.5 - txSeq) * sigAmp;
 
 %% Go through Rayleigh Fading Channel
 
-h0 = RayleighFadingChannel(Nw, fm, Nb, Fsym, t0, phiN);
+h0 = RayleighFadingChannel(Nw, fm, Nb, Feq, t0, phiN);
 txChanSig = txModSig .* h0;
 
 
@@ -99,20 +102,20 @@ fprintf('Sampling rate = %d\n', Fs);
 
 %% Plot the Relationship between SNR and BER
 
-nSnr = SNR;
-nSnrUnit = 10.^(SNR / 10);
+nEbn0 = Eb_N0;
+nUnit = 10.^(Eb_N0 / 10);
 
 figBer = figure(1);
 figBer.Name = 'BER Test for Rayleigh Fading Channel wuth BPSK Modulation';
 figBer.WindowState = 'maximized';
 
 subplot(2, 1, 1);
-semilogy(nSnr, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
+semilogy(nEbn0, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
 hold on
-semilogy(nSnr, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
+semilogy(nEbn0, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
 title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in dB)", ...
     "FontSize", 16);
-xlabel("SNR / dB", "FontSize", 16);
+xlabel("Eb/N0 / dB", "FontSize", 16);
 ylabel("BER", "FontSize", 16);
 legend("Theoretical BER", "Actual BER", "Fontsize", 16);
 hold off
@@ -120,12 +123,12 @@ grid on
 box on
 
 subplot(2, 1, 2);
-semilogy(nSnrUnit, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
+semilogy(nUnit, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
 hold on
-semilogy(nSnrUnit, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
+semilogy(nUnit, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
 title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in unit)", ...
     "FontSize", 16);
-xlabel("SNR", "FontSize", 16);
+xlabel("Eb/N0", "FontSize", 16);
 ylabel("BER", "FontSize", 16);
 legend("Theoretical BER", "Actual BER", "Fontsize", 16);
 hold off

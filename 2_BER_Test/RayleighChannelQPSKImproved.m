@@ -1,7 +1,7 @@
 % Description:  Test Program for Rayleigh Fading Channel Model
 %               Adopt QPSK Modulation
 % Projet:       Channel Modeling - iSure 2022
-% Date:         July 22, 2022
+% Date:         July 25, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
@@ -19,8 +19,9 @@ bitrate = 10000;                            % Bitrate (Hz)
 sigAmp = 1;                                 % Amplitude of transmission bits (V)
 Fs = 1e6;                                   % Sampling rate (Hz)
 M = 4;                                      % Modulation order
-sps = Fs / (bitrate / log2(M));             % Samples per symbol
-Fsym = Fs / log2(M);                        % Equivalent sampling rate for symbols (Hz)
+Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
+sps = Fs / Fsym;                            % Samples per symbol
+Feq= Fs / log2(M);                          % Equivalent sampling rate for symbols (Hz)
 
 % Define wireless communication environment parameters
 % Small-Scale fading
@@ -30,12 +31,13 @@ t0 = 0;                                     % Initial time (s)
 phiN = 0;                                   % Initial phase of signal with maximum doppler shift (rad)
 
 % Noise
-Eb_N0 = 0 : 0.5 : 30;                       % Average bit energy to single-sided noise spectrum power (dB)
-SNR = 10 * log10(2 / Fs * bitrate) + Eb_N0; % Signal-to-noise ratio (dB)
+Eb_N0 = 0 : 0.5 : 20;                       % Average bit energy to single-sided noise spectrum power (dB)
+Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
+SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 
 
 %% Signal source
-Nb = 100000;                                % Number of sending bits
+Nb = 50000;                                % Number of sending bits
 txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
@@ -58,7 +60,7 @@ txSamSigI = reshape(txSamTempI, 1, modLen * sps);
 txSamSigQ = reshape(txSamTempQ, 1, modLen * sps);
 
 % Generate roll-off filter (Raising Cosine Filter)
-rolloffFactor = 0.5;            % Roll-off factor
+rolloffFactor = 0.1;            % Roll-off factor
 rcosFir = rcosdesign(rolloffFactor, 6, sps, "sqrt");
 
 % Baseband shaping (Eliminate the impact of dalay)
@@ -77,7 +79,7 @@ baseLen = length(txBbSig);
 
 %% Go through Rayleigh Fading Channel
 
-h0 = RayleighFadingChannel(Nw, fm, baseLen, Fsym, t0, phiN);
+h0 = RayleighFadingChannel(Nw, fm, baseLen, Feq, t0, phiN);
 txChanSig = txBbSig .* h0;
 
 
@@ -89,7 +91,7 @@ theorBER = zeros(1, length(SNR));
 for i = 1 : length(SNR)
 
     % Generate gaussian white noise
-    sigmaN = sqrt(sigAmp^2 / 10^(SNR(i) / 10));
+    sigmaN = sqrt(2 * sigAmp^2 / 10^(SNR(i) / 10) / 2);
     chanNoise = sigmaN * (randn(1, baseLen) + 1i * randn(1, baseLen));
 
     % Signal goes through channel and add noise
