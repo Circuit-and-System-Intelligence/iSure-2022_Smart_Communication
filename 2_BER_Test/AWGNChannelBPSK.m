@@ -18,8 +18,9 @@ bitrate = 10000;                            % Bitrate (Hz)
 sigAmp = 1;                                 % Amplitude of transmission bits (V)
 Fs = bitrate;                               % Sampling rate (Hz)
 M = 2;                                      % Modulation order
-sps = Fs / (bitrate / log2(M));             % Samples per symbol
-Fsym = Fs / log2(M);                        % Equivalent sampling rate for symbols (Hz)
+Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
+sps = Fs / Fsym;                            % Samples per symbol
+Feq= Fs / log2(M);                          % Equivalent sampling rate for symbols (Hz)
 
 % Noise
 Eb_N0 = 0 : 0.1 : 10;                       % Average bit energy to single-sided noise spectrum power (dB)

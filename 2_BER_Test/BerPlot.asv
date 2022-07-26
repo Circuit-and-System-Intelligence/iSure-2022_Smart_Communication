@@ -1,0 +1,50 @@
+close all
+clear
+clc
+
+load("./data/ebn0_awgn_bpsk.mat", "Eb_N0");
+ebn0AwgnBpsk = Eb_N0;
+load("./data/ther_ber_awgn_bpsk.mat", "theorBER");
+berTheoAwgnBpsk = theorBER;
+load("./data/ber_awgn_bpsk.mat", "bitErrRate");
+berAwgnBpsk = bitErrRate;
+load("./data/ebn0_rayleigh_bpsk.mat", "Eb_N0");
+ebn0RayBpsk = Eb_N0;
+load("./data/ther_ber_rayleigh_bpsk.mat", "theorBER");
+berTheoRayBpsk = theorBER;
+load("./data/ber_rayleigh_bpsk_rrc_5.mat");
+
+%% Plot the Relationship between SNR and BER
+
+nEbn0 = ebn0AwgnBpsk;
+nUnit = 10.^(Eb_N0 / 10);
+
+figBer = figure(1);
+figBer.Name = 'BER Test for Rayleigh Fading Channel wuth QPSK Modulation';
+figBer.WindowState = 'maximized';
+
+subplot(2, 1, 1);
+semilogy(nEbn0, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "square");
+hold on
+semilogy(nEbn0, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "o");
+title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in dB)", ...
+    "FontSize", 16);
+xlabel("Eb/N0 / dB", "FontSize", 16);
+ylabel("BER", "FontSize", 16);
+legend("Theoretical BER", "Actual BER", "Fontsize", 16);
+hold off
+grid on
+box on
+
+subplot(2, 1, 2);
+semilogy(nUnit, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "square");
+hold on
+semilogy(nUnit, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "o");
+title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in unit)", ...
+    "FontSize", 16);
+xlabel("Eb/N0", "FontSize", 16);
+ylabel("BER", "FontSize", 16);
+legend("Theoretical BER", "Actual BER", "Fontsize", 16);
+hold off
+grid on
+box on

@@ -22,11 +22,11 @@ Feq= Fs / log2(M);                          % Equivalent sampling rate for symbo
 
 % Noise
 Eb_N0 = 0 : 0.1 : 20;                       % Average bit energy to single-sided noise spectrum density (dB)
-SNR = 10 * log10(2 / Fs * Fsym) + Eb_N0;    % Signal-to-noise ratio
+SNR = 10 * log10(Fsym / Fs) + Eb_N0;        % Signal-to-noise ratio
 
 
 %% Signal source
-Nb = 100000;                               % Number of sending bits
+Nb = 50000;                                 % Number of sending bits
 txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
@@ -64,7 +64,7 @@ theorBER = zeros(1, length(SNR));
 for i = 1 : length(SNR)
 
     % Generate gaussian white noise
-    sigmaN = sqrt(sigAmp^2 / 10^(SNR(i) / 10));
+    sigmaN = sqrt(sigAmp^2 / 10^(SNR(i) / 10) / 2);
     chanNoise = sigmaN * (randn(1, baseLen) + 1i* randn(1, baseLen));
 
     % Signal goes through channel and add noise
@@ -95,7 +95,7 @@ for i = 1 : length(SNR)
         end
     end
     bitErrRate(i) = bitErrNum / Nb;
-    theorBER(i) = qfunc(sqrt(10^(SNR(i) / 10)));
+    theorBER(i) = qfunc(sqrt(2 * 10^(SNR(i) / 10)));
 
 end
 
