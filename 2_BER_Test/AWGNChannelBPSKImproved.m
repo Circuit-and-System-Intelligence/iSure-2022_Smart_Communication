@@ -16,15 +16,17 @@ bitrate = 10000;                            % Bitrate (Hz)
 sigAmp = 1;                                 % Amplitude of transmission bits (V)
 Fs = 1e6;                                   % Sampling rate (Hz)
 M = 2;                                      % Modulation order
-sps = Fs / (bitrate / log2(M));             % Samples per symbol
+Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
+sps = Fs / Fsym;                            % Samples per symbol
+Feq= Fs / log2(M);                          % Equivalent sampling rate for symbols (Hz)
 
 % Noise
-Eb_N0 = 0 : 0.1 : 10;                       % Average bit energy to single-sided noise spectrum density (dB)
-SNR = 10 * log10(2 / Fs * bitrate) + Eb_N0; % Signal-to-noise ratio
+Eb_N0 = 0 : 0.1 : 20;                       % Average bit energy to single-sided noise spectrum density (dB)
+SNR = 10 * log10(2 / Fs * Fsym) + Eb_N0;    % Signal-to-noise ratio
 
 
 %% Signal source
-Nb = 16384;                                 % Number of sending bits
+Nb = 100000;                               % Number of sending bits
 txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
