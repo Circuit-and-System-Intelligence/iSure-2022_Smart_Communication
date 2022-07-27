@@ -3,7 +3,7 @@
 % Date:         July 24, 2022
 % Author:       Zhiyu Shen
 
-% Description:
+% Additional Description:
 %   Adopt AWGN channel
 
 clc

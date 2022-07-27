@@ -28,7 +28,7 @@ figBer.WindowState = 'maximized';
 
 semilogy(nEbn0, berTheoAwgnBpsk, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
 hold on
-semilogy(nEbn0, berTheoRayBpsk, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
+semilogy(nEbn0, berTheoRayBpsk, "LineWidth", 2, "Color", "#0072BD", "Marker", "o");
 semilogy(nEbn0, berAwgnBpsk, "LineWidth", 2, "Color", "#D95319", "Marker", "o");
 semilogy(nEbn0, berRayBpsk, "LineWidth", 2, "Color", "#D95319", "Marker", "o");
 title("BER Characteristic with BPSK Modulation (Eb/N0 in dB)", ...
