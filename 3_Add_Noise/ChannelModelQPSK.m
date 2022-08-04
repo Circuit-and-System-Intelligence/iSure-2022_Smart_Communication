@@ -1,6 +1,7 @@
 % Description:  Test Program for Fading Channel Model with QPSK Modulation
+%               For noise test
 % Projet:       Channel Modeling - iSure 2022
-% Date:         July 12, 2022
+% Date:         July 30, 2022
 % Author:       Zhiyu Shen
 
 clc
