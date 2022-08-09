@@ -2,7 +2,7 @@
 %               Adopt BPSK Modulation
 %               For Noise Test
 % Projet:       Channel Modeling - iSure 2022
-% Date:         Aug 7, 2022
+% Date:         Aug 4, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
@@ -19,7 +19,7 @@ close all
 bitrate = 100000;                           % Bitrate (Hz)
 stdAmp = 1;                                 % Amplitude of transmission bits (V)
 Np = 4;                                     % Number of bits in a package
-Fs = bitrate;                               % Sampling rate (Hz)
+Fs = 1e6;                                   % Sampling rate (Hz)
 M = 2;                                      % Modulation order
 Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
 sps = Fs / Fsym;                            % Samples per symbol
@@ -28,7 +28,7 @@ Feq= Fs / log2(M);                          % Equivalent sampling rate for symbo
 % Define wireless communication environment parameters
 
 % Noise
-Eb_N0 = 0;                                 % Average bit energy to single-sided noise spectrum power (dB)
+Eb_N0 = 20;                                 % Average bit energy to single-sided noise spectrum power (dB)
 Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
 SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 % Transimitter gain
@@ -41,7 +41,7 @@ Gt4 = stdAmp;
 %% Signal source
 
 % Generate sending data (Decimal)
-Ndata = 10000;                              % Number of sending datas (Decimalism)
+Ndata = 1000;                              % Number of sending datas (Decimalism)
 dataSend = randi(10, 1, Ndata);             % Sending data (Decimal)
 
 % Convert decimal numbers into binary sequence (1st: MSb -> last: LSB)
@@ -52,7 +52,7 @@ txSeqTempB = fix(txSeqResA / 2^(Np - 2));
 txSeqTempC = fix((txSeqResA - txSeqTempB * 2^(Np - 2)) / 2^(Np - 3));
 txSeqTempD = mod(dataSend, 2);
 txSeqTemp = [txSeqTempA; txSeqTempB; txSeqTempC; txSeqTempD];
-txSeq = reshape(txSeqTemp, 1, Nb);          % Binary sending sequence (0 and 1 seq)
+txSeq = reshape(txSeqTemp, 1, Nb);   % Binary sending sequence (0 and 1 seq)
 
 clear txSeqTempA txSeqTempB txSeqTempC txSeqTempD txSeqResA txSeqTemp
 
@@ -60,82 +60,111 @@ clear txSeqTempA txSeqTempB txSeqTempC txSeqTempD txSeqResA txSeqTemp
 
 % BPSK baeband modulation （No phase rotation)
 txModSig = 2 * (txSeq - 0.5) * stdAmp;
-baseLen = length(txModSig);
+
+
+%% Baseband Shaping
+
+% Upsampling (Interpolation)
+modLen = length(txModSig);                  % Fetch the length of modulated signal
+txSampZero = zeros(sps - 1, modLen);        % Zero vector added to original signal vector
+txSamTemp = [txModSig; txSampZero];         % Upsamling for each element of I signal vector
+txSamSig = reshape(txSamTemp, 1, modLen * sps);
+
+clear txSampZero txSamTemp
+
+% Generate roll-off filter (Raising Cosine Filter)
+rolloffFactor = 0.5;                        % Roll-off factor
+rcosFir = rcosdesign(rolloffFactor, 6, sps, "sqrt");
+
+% Baseband shaping (Eliminate the impact of dalay)
+txFiltSigTemp = conv(txSamSig, rcosFir);
+txFilterHead = (length(rcosFir) - 1) / 2;
+txFiltSig = txFiltSigTemp(1, (txFilterHead + 1) : (length(txFiltSigTemp) - txFilterHead));
+
+txBbSig = txFiltSig;
+baseLen = length(txBbSig);
+
+% fvtool(rcosFir,'Analysis','impulse');
+
+figure(2)
+subplot(211)
+plot(txSamSig(1:100));
+subplot(212)
+plot(txBbSig(1:100));
+
+clear txFiltSigTemp txFilterHead
+
 
 %% Adjust Transmission Power According to Bit Order
 
+txTemp = reshape(txBbSig, baseLen / sps, sps);
 idxPackA = 1 : 4 : Nb;                      % Index of MSB in a pack
 idxPackB = 2 : 4 : Nb;                      % Index of 2nd bit in a pcak
 idxPackC = 3 : 4 : Nb;                      % Index of 3rd bit in a pack
 idxPackD = 4 : 4 : Nb;                      % Index of LSB in a pack
 
-txBbTemp(idxPackA) = Gt1 * txModSig(idxPackA);
-txBbTemp(idxPackB) = Gt2 * txModSig(idxPackB);
-txBbTemp(idxPackC) = Gt3 * txModSig(idxPackC);
-txBbTemp(idxPackD) = Gt4 * txModSig(idxPackD);
+txTemp(idxPackA) = Gt1 * txTemp(idxPackA);
+txTemp(idxPackB) = Gt2 * txTemp(idxPackB);
+txTemp(idxPackC) = Gt3 * txTemp(idxPackC);
+txTemp(idxPackD) = Gt4 * txTemp(idxPackD);
 
-txBbSig = reshape(txBbTemp, 1, baseLen);
-gainVar = txBbSig ./ txModSig;
-
-% txBbSig = txModSig;
+txSig = reshape(txTemp, 1, baseLen);
 
 
 %% Add Noise
 
 % Calculate signal power
-Ps = sum(txModSig.^2) / baseLen;
+Ps = sum(txBbSig.^2) / baseLen;
 
 % Generate gaussian white noise
 sigmaN = sqrt(Ps / 10^(SNR / 10) / 2);
 chanNoise = sigmaN * randn(1, baseLen) + 1i * sigmaN * randn(1, baseLen);
 
 % Signal goes through channel and add noise
-rxBbSig = real(txBbSig + chanNoise);
+rxBbSig = real(txSig + chanNoise);
+
+
+%% Baseband Recovery
+
+% Raise-cosine filter
+rxFiltSigTemp = conv(rxBbSig, rcosFir);
+rxFiltHead = (length(rcosFir) - 1) / 2;
+rxFiltSig = rxFiltSigTemp(1, (rxFiltHead + 1) : (length(rxFiltSigTemp) - rxFiltHead));
+
+clear rxFiltSigTemp rxFilterHead
+
+% Sampling
+rxSampSigTemp = reshape(rxFiltSig, sps, modLen);
+rxSampSig = rxSampSigTemp(1, :);
+
+clear rxSampSigTemp
 
 
 %% Recover data
-
-% dataRecvTemp = reshape((rxBbSig + 1) / 2, Np, Ndata);
+dataRecvTemp = reshape((rxSampSig + 1) / 2, Np, Ndata);
 % dataRecv = dataRecvTemp(1, :) * 2^(Np - 1) + dataRecvTemp(2, :) * 2^(Np - 2) + ...
 %            dataRecvTemp(3, :) * 2^(Np - 3) + dataRecvTemp(4, :) * 1;
+dataRecv = dataRecvTemp(1, :) + dataRecvTemp(2, :) + ...
+            dataRecvTemp(3, :) + dataRecvTemp(4, :);
 
-dataRecvTemp = reshape(rxBbSig, Np, Ndata);
-dataRecvA = dataRecvTemp(1, :) + Gt1 * ones(1, Ndata);
-dataRecvB = dataRecvTemp(2, :) + Gt2 * ones(1, Ndata);
-dataRecvC = dataRecvTemp(3, :) + Gt3 2 * ones(1, Ndata);
-dataRecvD = dataRecvTemp(4, :) + Gt4 / 2 * ones(1, Ndata);
-dataRecv = dataRecvA + dataRecvB + dataRecvC + dataRecvD;
-
-% clear dataRecvTemp
-
-figure(3)
-hold on
-plot(dataSend(1:10));
-plot(dataRecv(1:10));
-legend('Send', 'Receive');
-hold off
+clear dataRecvTemp
 
 
 %% Compute Error
 
-bitErr = rxBbSig - txModSig;
+bitErr = rxSampSig - txModSig;
 dataErr = dataRecv - dataSend;
 
 
 %% Print Transmission Information
 
 fprintf('---------- Environment Information ----------\n');
-fprintf('AWGN Channel\n');
-fprintf('Baseband Equivalent\n');
-fprintf('SNR = %d dB\n', SNR);
-fprintf('Noise Power = %.3d\n', sigmaN^2);
-
+fprintf('SNR Changes\n');
 
 fprintf('----------- Transmission Settings -----------\n');
 fprintf('Bitrate = %d Hz\n', bitrate);
 fprintf('Number of Data = %d\n', Ndata);
-fprintf('Data Range = 0~9\n');
-fprintf('Pack Size = %d bits\n', Np);
+fprintf('Sampling rate = %d\n', Fs);
 
 
 %% Plot
@@ -145,52 +174,29 @@ transErrPlt = figure(1);
 transErrPlt.Name = 'Transmission Error for AWGN with BPSK Modulation';
 transErrPlt.WindowState = 'maximized';
 
-subplot(3, 2, 1);
+subplot(2, 2, 1);
 plot(bitErr, "LineWidth", 2, "Color", "#0072BD");
 title('Bit Error in Time Domain', 'FontSize', 16);
 xlabel('Sequence Index');
 ylabel('Error / V');
 
-subplot(3, 2, 2)
-hold on
+subplot(2, 2, 3)
 histogram(bitErr, 100, 'Normalization', 'pdf');
-% distMag = -4 * sigmaN : 0.01 : 4 * sigmaN;
-% idealMagPdf = normpdf(distMag, 0, sigmaN);
-% plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 1.5);
+title('Bit Error Distribution', 'FontSize', 16);
 xlabel('Magnitude');
 ylabel('PDF');
-title('Bit Error Distribution', 'FontSize', 16);
-% legend('Simulation', 'Ideal');
-hold off
 
-subplot(3, 2, 3);
+subplot(2, 2, 2);
 plot(dataErr, "LineWidth", 2, "Color", "#0072BD");
 title('Data Error in Time Domain', 'FontSize', 16);
 xlabel('Sequence Index');
 ylabel('Error / V');
 
-subplot(3, 2, 4)
-hold on
+subplot(2, 2, 4)
 histogram(dataErr, 100, 'Normalization', 'pdf');
-distMag = -4 * sigmaN : 0.01 : 4 * sigmaN;
-idealMagPdf = normpdf(distMag, 0, sqrt(Np) * sigmaN);
-plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 1.5);
-xlabel('Magnitude');
-ylabel('PDF');
-title('Bit Error Distribution', 'FontSize', 16);
-legend('Simulation', 'Ideal');
-hold off
-
 title('Data Error Distribution', 'FontSize', 16);
 xlabel('Magnitude');
 ylabel('PDF');
-
-subplot(3, 2, 5)
-pwrTx = 10 * log10(gainVar.^2);
-plot(pwrTx(1 : 10 * Np), 'Color', '#D95319', 'LineWidth', 1.5);
-title('Transmission Power', 'FontSize', 16);
-xlabel('Index of Bits');
-ylabel('Transmission Power / dB');
 
 
 

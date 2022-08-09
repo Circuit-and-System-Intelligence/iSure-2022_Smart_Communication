@@ -58,8 +58,12 @@ clear txSeqTempA txSeqTempB txSeqTempC txSeqTempD txSeqResA txSeqTemp
 
 %% Baseband Modulation
 
+% NRZ code
+txModSig = txSeq;
+
 % BPSK baeband modulation （No phase rotation)
-txModSig = 2 * (txSeq - 0.5) * stdAmp;
+% txModSig = 2 * (txSeq - 0.5) * stdAmp;
+
 baseLen = length(txModSig);
 
 %% Adjust Transmission Power According to Bit Order
@@ -75,7 +79,11 @@ txBbTemp(idxPackC) = Gt3 * txModSig(idxPackC);
 txBbTemp(idxPackD) = Gt4 * txModSig(idxPackD);
 
 txBbSig = reshape(txBbTemp, 1, baseLen);
-gainVar = txBbSig ./ txModSig;
+gainVar = ones(1, Nb);
+gainVar(idxPackA) = Gt1;
+gainVar(idxPackB) = Gt2;
+gainVar(idxPackC) = Gt3;
+gainVar(idxPackD) = Gt4;
 
 % txBbSig = txModSig;
 
@@ -99,14 +107,18 @@ rxBbSig = real(txBbSig + chanNoise);
 % dataRecv = dataRecvTemp(1, :) * 2^(Np - 1) + dataRecvTemp(2, :) * 2^(Np - 2) + ...
 %            dataRecvTemp(3, :) * 2^(Np - 3) + dataRecvTemp(4, :) * 1;
 
-dataRecvTemp = reshape(rxBbSig, Np, Ndata);
-dataRecvA = dataRecvTemp(1, :) + Gt1 * ones(1, Ndata);
-dataRecvB = dataRecvTemp(2, :) + Gt2 * ones(1, Ndata);
-dataRecvC = dataRecvTemp(3, :) + Gt3 2 * ones(1, Ndata);
-dataRecvD = dataRecvTemp(4, :) + Gt4 / 2 * ones(1, Ndata);
-dataRecv = dataRecvA + dataRecvB + dataRecvC + dataRecvD;
+% dataRecvTemp = reshape(rxBbSig, Np, Ndata);
+% dataRecvA = (dataRecvTemp(1, :) + Gt1 * ones(1, Ndata)) / 2;
+% dataRecvB = (dataRecvTemp(2, :) + Gt2 * ones(1, Ndata)) / 2;
+% dataRecvC = (dataRecvTemp(3, :) + Gt3 * ones(1, Ndata)) / 2;
+% dataRecvD = (dataRecvTemp(4, :) + Gt4 * ones(1, Ndata)) / 2;
+% dataRecv = dataRecvA + dataRecvB + dataRecvC + dataRecvD;
 
-% clear dataRecvTemp
+dataRecvTemp = reshape(rxBbSig, Np, Ndata);
+dataRecv = dataRecvTemp(1, :) + dataRecvTemp(2, :) + ...
+           dataRecvTemp(3, :) + dataRecvTemp(4, :);
+
+clear dataRecvTemp
 
 figure(3)
 hold on
@@ -172,7 +184,7 @@ ylabel('Error / V');
 subplot(3, 2, 4)
 hold on
 histogram(dataErr, 100, 'Normalization', 'pdf');
-distMag = -4 * sigmaN : 0.01 : 4 * sigmaN;
+distMag = -5 * sigmaN : 0.01 : 5 * sigmaN;
 idealMagPdf = normpdf(distMag, 0, sqrt(Np) * sigmaN);
 plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 1.5);
 xlabel('Magnitude');

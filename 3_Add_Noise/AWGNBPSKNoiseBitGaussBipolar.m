@@ -31,11 +31,6 @@ Feq= Fs / log2(M);                          % Equivalent sampling rate for symbo
 Eb_N0 = 0;                                 % Average bit energy to single-sided noise spectrum power (dB)
 Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
 SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
-% Transimitter gain
-Gt1 = 2^(Np - 1) * stdAmp;                  % Gain of MSB in a pack
-Gt2 = 2^(Np - 2) * stdAmp;                  % Gain of 2nd bit in a pack
-Gt3 = 2^(Np - 3) * stdAmp;                  % Gain of 3rd bit in a pack
-Gt4 = stdAmp;
 
 
 %% Signal source
@@ -62,28 +57,13 @@ clear txSeqTempA txSeqTempB txSeqTempC txSeqTempD txSeqResA txSeqTemp
 txModSig = 2 * (txSeq - 0.5) * stdAmp;
 baseLen = length(txModSig);
 
-%% Adjust Transmission Power According to Bit Order
-
-idxPackA = 1 : 4 : Nb;                      % Index of MSB in a pack
-idxPackB = 2 : 4 : Nb;                      % Index of 2nd bit in a pcak
-idxPackC = 3 : 4 : Nb;                      % Index of 3rd bit in a pack
-idxPackD = 4 : 4 : Nb;                      % Index of LSB in a pack
-
-txBbTemp(idxPackA) = Gt1 * txModSig(idxPackA);
-txBbTemp(idxPackB) = Gt2 * txModSig(idxPackB);
-txBbTemp(idxPackC) = Gt3 * txModSig(idxPackC);
-txBbTemp(idxPackD) = Gt4 * txModSig(idxPackD);
-
-txBbSig = reshape(txBbTemp, 1, baseLen);
-gainVar = txBbSig ./ txModSig;
-
-% txBbSig = txModSig;
+txBbSig = txModSig;
 
 
 %% Add Noise
 
 % Calculate signal power
-Ps = sum(txModSig.^2) / baseLen;
+Ps = sum(txBbSig.^2) / baseLen;
 
 % Generate gaussian white noise
 sigmaN = sqrt(Ps / 10^(SNR / 10) / 2);
@@ -95,30 +75,17 @@ rxBbSig = real(txBbSig + chanNoise);
 
 %% Recover data
 
-% dataRecvTemp = reshape((rxBbSig + 1) / 2, Np, Ndata);
-% dataRecv = dataRecvTemp(1, :) * 2^(Np - 1) + dataRecvTemp(2, :) * 2^(Np - 2) + ...
-%            dataRecvTemp(3, :) * 2^(Np - 3) + dataRecvTemp(4, :) * 1;
+dataRecvTemp = reshape((rxBbSig + 1) / 2, Np, Ndata);
+dataRecv = dataRecvTemp(1, :) * 2^(Np - 1) + dataRecvTemp(2, :) * 2^(Np - 2) + ...
+           dataRecvTemp(3, :) * 2^(Np - 3) + dataRecvTemp(4, :) * 1;
 
-dataRecvTemp = reshape(rxBbSig, Np, Ndata);
-dataRecvA = dataRecvTemp(1, :) + Gt1 * ones(1, Ndata);
-dataRecvB = dataRecvTemp(2, :) + Gt2 * ones(1, Ndata);
-dataRecvC = dataRecvTemp(3, :) + Gt3 2 * ones(1, Ndata);
-dataRecvD = dataRecvTemp(4, :) + Gt4 / 2 * ones(1, Ndata);
-dataRecv = dataRecvA + dataRecvB + dataRecvC + dataRecvD;
-
-% clear dataRecvTemp
-
-figure(3)
-hold on
-plot(dataSend(1:10));
-plot(dataRecv(1:10));
-legend('Send', 'Receive');
-hold off
+clear dataRecvTemp
 
 
 %% Compute Error
 
-bitErr = rxBbSig - txModSig;
+% bitErr = rxBbSig - txModSig;
+bitErr = (rxBbSig + 1) / 2 - txSeq;
 dataErr = dataRecv - dataSend;
 
 
@@ -128,7 +95,8 @@ fprintf('---------- Environment Information ----------\n');
 fprintf('AWGN Channel\n');
 fprintf('Baseband Equivalent\n');
 fprintf('SNR = %d dB\n', SNR);
-fprintf('Noise Power = %.3d\n', sigmaN^2);
+fprintf('Signal Power = %d w\n', Ps);
+fprintf('Noise Power for Bits = %.3d w\n', sigmaN^2);
 
 
 fprintf('----------- Transmission Settings -----------\n');
@@ -145,35 +113,17 @@ transErrPlt = figure(1);
 transErrPlt.Name = 'Transmission Error for AWGN with BPSK Modulation';
 transErrPlt.WindowState = 'maximized';
 
-subplot(3, 2, 1);
-plot(bitErr, "LineWidth", 2, "Color", "#0072BD");
+subplot(2, 2, 1);
+plot(bitErr(1 : 100 * Np), "LineWidth", 2, "Color", "#0072BD");
 title('Bit Error in Time Domain', 'FontSize', 16);
 xlabel('Sequence Index');
 ylabel('Error / V');
 
-subplot(3, 2, 2)
+subplot(2, 2, 2)
 hold on
 histogram(bitErr, 100, 'Normalization', 'pdf');
-% distMag = -4 * sigmaN : 0.01 : 4 * sigmaN;
-% idealMagPdf = normpdf(distMag, 0, sigmaN);
-% plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 1.5);
-xlabel('Magnitude');
-ylabel('PDF');
-title('Bit Error Distribution', 'FontSize', 16);
-% legend('Simulation', 'Ideal');
-hold off
-
-subplot(3, 2, 3);
-plot(dataErr, "LineWidth", 2, "Color", "#0072BD");
-title('Data Error in Time Domain', 'FontSize', 16);
-xlabel('Sequence Index');
-ylabel('Error / V');
-
-subplot(3, 2, 4)
-hold on
-histogram(dataErr, 100, 'Normalization', 'pdf');
 distMag = -4 * sigmaN : 0.01 : 4 * sigmaN;
-idealMagPdf = normpdf(distMag, 0, sqrt(Np) * sigmaN);
+idealMagPdf = normpdf(distMag, 0, sigmaN / 2);
 plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 1.5);
 xlabel('Magnitude');
 ylabel('PDF');
@@ -181,16 +131,27 @@ title('Bit Error Distribution', 'FontSize', 16);
 legend('Simulation', 'Ideal');
 hold off
 
+subplot(2, 2, 3);
+plot(dataErr(1 : 100), "LineWidth", 2, "Color", "#0072BD");
+title('Data Error in Time Domain', 'FontSize', 16);
+xlabel('Sequence Index');
+ylabel('Error / V');
+
+subplot(2, 2, 4)
+hold on
+histogram(dataErr, 100, 'Normalization', 'pdf');
+sigmaNd = sigmaN * 15 / 2;
+distMag = -4 * sigmaNd : 0.01 : 4 * sigmaNd;
+idealMagPdf = normpdf(distMag, 0, sigmaNd);
+plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 1.5);
+xlabel('Magnitude');
+ylabel('PDF');
+title('Data Error Distribution', 'FontSize', 16);
+hold off
+
 title('Data Error Distribution', 'FontSize', 16);
 xlabel('Magnitude');
 ylabel('PDF');
-
-subplot(3, 2, 5)
-pwrTx = 10 * log10(gainVar.^2);
-plot(pwrTx(1 : 10 * Np), 'Color', '#D95319', 'LineWidth', 1.5);
-title('Transmission Power', 'FontSize', 16);
-xlabel('Index of Bits');
-ylabel('Transmission Power / dB');
 
 
 
