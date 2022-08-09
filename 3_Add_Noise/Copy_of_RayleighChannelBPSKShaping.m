@@ -2,7 +2,7 @@
 %               Adopt BPSK Modulation
 %               For Noise Test
 % Projet:       Channel Modeling - iSure 2022
-% Date:         Aug 9, 2022
+% Date:         Aug 2, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
@@ -19,8 +19,7 @@ close all
 % Define baseband parameters
 bitrate = 10000;                            % Bitrate (Hz)
 sigAmp = 1;                                 % Amplitude of transmission bits (V)
-Np = 4;                                     % Number of bits in a package
-Fs = bitrate;                               % Sampling rate (Hz)
+Fs = 1e6;                                   % Sampling rate (Hz)
 M = 2;                                      % Modulation order
 Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
 sps = Fs / Fsym;                            % Samples per symbol
@@ -39,28 +38,33 @@ SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 
 
 %% Signal source
-% Generate sending data (Decimal)
-Ndata = 10000;                              % Number of sending datas (Decimalism)
-dataSend = randi(10, 1, Ndata);             % Sending data (Decimal)
-
-% Convert decimal numbers into binary sequence (1st: MSb -> last: LSB)
-Nb = Ndata * Np;                            % Number of bits
-txSeqTempA = fix(dataSend / 2^(Np - 1));
-txSeqResA = dataSend - txSeqTempA * 2^(Np - 1);
-txSeqTempB = fix(txSeqResA / 2^(Np - 2));
-txSeqTempC = fix((txSeqResA - txSeqTempB * 2^(Np - 2)) / 2^(Np - 3));
-txSeqTempD = mod(dataSend, 2);
-txSeqTemp = [txSeqTempA; txSeqTempB; txSeqTempC; txSeqTempD];
-txSeq = reshape(txSeqTemp, 1, Nb);          % Binary sending sequence (0 and 1 seq)
-
-clear txSeqTempA txSeqTempB txSeqTempC txSeqTempD txSeqResA txSeqTemp
+Nb = 50000;                                 % Number of sending bits
+txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
 %% Baseband Modulation
 
 % BPSK baeband modulation （No phase rotation)
 txModSig = 2 * (0.5 - txSeq) * sigAmp;
-txBbSig = txModSig;
+
+
+%% Baseband Shaping
+
+% Upsampling (Interpolation)
+modLen = length(txModSig);                  % Fetch the length of modulated signal
+txSampZero = zeros(sps - 1, modLen);        % Zero vector added to original signal vector
+txSamTemp = [txModSig; txSampZero];         % Upsamling for each element of I signal vector
+txSamSig = reshape(txSamTemp, 1, modLen * sps);
+
+% Generate roll-off filter (Raising Cosine Filter)
+rolloffFactor = 0.5;                        % Roll-off factor
+rcosFir = rcosdesign(rolloffFactor, 6, sps, "sqrt");
+
+% Baseband shaping (Eliminate the impact of dalay)
+txFiltSigTemp = conv(txSamSig, rcosFir);
+txFilterHead = (length(rcosFir) - 1) / 2;
+txFiltSig = txFiltSigTemp(1, (txFilterHead + 1) : (length(txFiltSigTemp) - txFilterHead));
+txBbSig = txFiltSig;
 baseLen = length(txBbSig);
 
 
@@ -72,7 +76,6 @@ txChanSig = txBbSig .* h0;
 %% Add Noise
 
 % Generate gaussian white noise
-Ps = sigAmp^2;
 sigmaN = sqrt(sigAmp^2 / 10^(SNR / 10) / 2);
 chanNoise = sigmaN * randn(1, baseLen) + 1i * sigmaN * randn(1, baseLen);
 
@@ -83,30 +86,34 @@ rxChanSig = txChanSig + chanNoise;
 rxBbSig = real(rxChanSig ./ h0);
 
 
+%% Baseband Recovery
+
+% Raise-cosine filter
+rxFiltSigTemp = conv(rxBbSig, rcosFir);
+rxFiltHead = (length(rcosFir) - 1) / 2;
+rxFiltSig = rxFiltSigTemp(1, (rxFiltHead + 1) : (length(rxFiltSigTemp) - rxFiltHead));
+
+% Sampling
+rxSampSigTemp = reshape(rxFiltSig, sps, modLen);
+rxSampSig = rxSampSigTemp(1, :);
+
 %% Compute Error
 
-modSigErr = rxBbSig - txBbSig;
+modSigErr = rxSampSig - txModSig;
 
 
 %% Print Transmission Information
 
-fprintf('Rayleigh Fading Channel, BPSK Modulation\n');
-fprintf('Baseband Equivalent\n');
-fprintf('Bit Error Gaussian Distributed\n\n')
-
 fprintf('---------- Environment Information ----------\n');
 fprintf('Number of Scaterred Rays = %d\n', Nw);
 fprintf('Doppler Shift = %.2f Hz\n', fm);
-fprintf('SNR = %d dB\n', SNR);
-fprintf('Signal Power = %d w\n', Ps);
-fprintf('Noise Power for Bits = %.3d w\n\n', sigmaN^2);
-
+fprintf('SNR Changes\n');
 
 fprintf('----------- Transmission Settings -----------\n');
 fprintf('Bitrate = %d Hz\n', bitrate);
-fprintf('Number of Data = %d\n', Ndata);
-fprintf('Data Range = 0~9\n');
-fprintf('Pack Size = %d bits\n', Np);
+fprintf('Number of Bits = %d\n', Nb);
+fprintf('Sampling rate = %d\n', Fs);
+
 
 %% Plot
 

@@ -2,7 +2,7 @@
 %               Adopt BPSK Modulation
 %               For Noise Test
 % Projet:       Channel Modeling - iSure 2022
-% Date:         Aug 7, 2022
+% Date:         Aug 5, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
@@ -37,19 +37,18 @@ SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 
 % Generate sending data (Decimal)
 Ndata = 10000;                              % Number of sending datas (Decimalism)
-dataSend = randi(10, 1, Ndata);             % Sending data (Decimal)
+dataSend = randi([0, 2^Np - 1], 1, Ndata);  % Sending data (Decimal)
 
 % Convert decimal numbers into binary sequence (1st: MSb -> last: LSB)
 Nb = Ndata * Np;                            % Number of bits
-txSeqTempA = fix(dataSend / 2^(Np - 1));
-txSeqResA = dataSend - txSeqTempA * 2^(Np - 1);
-txSeqTempB = fix(txSeqResA / 2^(Np - 2));
-txSeqTempC = fix((txSeqResA - txSeqTempB * 2^(Np - 2)) / 2^(Np - 3));
-txSeqTempD = mod(dataSend, 2);
-txSeqTemp = [txSeqTempA; txSeqTempB; txSeqTempC; txSeqTempD];
+txSeqTemp = zeros(Np, Ndata);
+txSeqRes = dataSend;
+for i = 1 : Np
+    txSeqTemp(i, :) = fix(txSeqRes / 2^(Np - i));
+    txSeqRes = txSeqRes - txSeqTemp(i, :) * 2^(Np - i);
+end
 txSeq = reshape(txSeqTemp, 1, Nb);          % Binary sending sequence (0 and 1 seq)
 
-clear txSeqTempA txSeqTempB txSeqTempC txSeqTempD txSeqResA txSeqTemp
 
 %% Baseband Modulation
 
@@ -73,13 +72,17 @@ chanNoise = sigmaN * randn(1, baseLen) + 1i * sigmaN * randn(1, baseLen);
 rxBbSig = real(txBbSig + chanNoise);
 
 
+%% Demodulate
+
+rxSeqTemp = rxBbSig ./ abs(rxBbSig);
+rxSeq = (rxSeqTemp + 1) / 2;
+
+
 %% Recover data
 
-dataRecvTemp = reshape((rxBbSig + 1) / 2, Np, Ndata);
-dataRecv = dataRecvTemp(1, :) * 2^(Np - 1) + dataRecvTemp(2, :) * 2^(Np - 2) + ...
-           dataRecvTemp(3, :) * 2^(Np - 3) + dataRecvTemp(4, :) * 1;
-
-clear dataRecvTemp
+dataRecvTemp = reshape(rxSeq, Np, Ndata).';
+recVec = (2.^(Np - 1 : -1 : 0)).';
+dataRecv = (dataRecvTemp * recVec).';
 
 
 %% Compute Error
@@ -91,18 +94,20 @@ dataErr = dataRecv - dataSend;
 
 %% Print Transmission Information
 
-fprintf('---------- Environment Information ----------\n');
-fprintf('AWGN Channel\n');
+fprintf('AWGN Channel, BPSK Mdulation\n');
 fprintf('Baseband Equivalent\n');
+fprintf('Bit Error Gaussian Distributed\n\n')
+
+fprintf('---------- Environment Information ----------\n');
 fprintf('SNR = %d dB\n', SNR);
 fprintf('Signal Power = %d w\n', Ps);
-fprintf('Noise Power for Bits = %.3d w\n', sigmaN^2);
+fprintf('Noise Power for Bits = %.3d w\n\n', sigmaN^2);
 
 
 fprintf('----------- Transmission Settings -----------\n');
 fprintf('Bitrate = %d Hz\n', bitrate);
 fprintf('Number of Data = %d\n', Ndata);
-fprintf('Data Range = 0~9\n');
+fprintf('Data Range = 0 ~ %d\n', 2^Np - 1);
 fprintf('Pack Size = %d bits\n', Np);
 
 
@@ -135,23 +140,13 @@ subplot(2, 2, 3);
 plot(dataErr(1 : 100), "LineWidth", 2, "Color", "#0072BD");
 title('Data Error in Time Domain', 'FontSize', 16);
 xlabel('Sequence Index');
-ylabel('Error / V');
+ylabel('Error');
 
 subplot(2, 2, 4)
-hold on
 histogram(dataErr, 100, 'Normalization', 'pdf');
-sigmaNd = sigmaN * 15 / 2;
-distMag = -4 * sigmaNd : 0.01 : 4 * sigmaNd;
-idealMagPdf = normpdf(distMag, 0, sigmaNd);
-plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 1.5);
 xlabel('Magnitude');
 ylabel('PDF');
 title('Data Error Distribution', 'FontSize', 16);
-hold off
-
-title('Data Error Distribution', 'FontSize', 16);
-xlabel('Magnitude');
-ylabel('PDF');
 
 
 

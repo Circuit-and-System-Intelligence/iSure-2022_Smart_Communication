@@ -2,7 +2,7 @@
 %               Adopt BPSK Modulation
 %               For Noise Test
 % Projet:       Channel Modeling - iSure 2022
-% Date:         Aug 7, 2022
+% Date:         Aug 8, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
@@ -60,10 +60,6 @@ clear txSeqTempA txSeqTempB txSeqTempC txSeqTempD txSeqResA txSeqTemp
 
 % NRZ code
 txModSig = txSeq;
-
-% BPSK baeband modulation （No phase rotation)
-% txModSig = 2 * (txSeq - 0.5) * stdAmp;
-
 baseLen = length(txModSig);
 
 %% Adjust Transmission Power According to Bit Order
@@ -85,8 +81,6 @@ gainVar(idxPackB) = Gt2;
 gainVar(idxPackC) = Gt3;
 gainVar(idxPackD) = Gt4;
 
-% txBbSig = txModSig;
-
 
 %% Add Noise
 
@@ -103,29 +97,11 @@ rxBbSig = real(txBbSig + chanNoise);
 
 %% Recover data
 
-% dataRecvTemp = reshape((rxBbSig + 1) / 2, Np, Ndata);
-% dataRecv = dataRecvTemp(1, :) * 2^(Np - 1) + dataRecvTemp(2, :) * 2^(Np - 2) + ...
-%            dataRecvTemp(3, :) * 2^(Np - 3) + dataRecvTemp(4, :) * 1;
-
-% dataRecvTemp = reshape(rxBbSig, Np, Ndata);
-% dataRecvA = (dataRecvTemp(1, :) + Gt1 * ones(1, Ndata)) / 2;
-% dataRecvB = (dataRecvTemp(2, :) + Gt2 * ones(1, Ndata)) / 2;
-% dataRecvC = (dataRecvTemp(3, :) + Gt3 * ones(1, Ndata)) / 2;
-% dataRecvD = (dataRecvTemp(4, :) + Gt4 * ones(1, Ndata)) / 2;
-% dataRecv = dataRecvA + dataRecvB + dataRecvC + dataRecvD;
-
 dataRecvTemp = reshape(rxBbSig, Np, Ndata);
 dataRecv = dataRecvTemp(1, :) + dataRecvTemp(2, :) + ...
            dataRecvTemp(3, :) + dataRecvTemp(4, :);
 
 clear dataRecvTemp
-
-figure(3)
-hold on
-plot(dataSend(1:10));
-plot(dataRecv(1:10));
-legend('Send', 'Receive');
-hold off
 
 
 %% Compute Error
@@ -136,11 +112,14 @@ dataErr = dataRecv - dataSend;
 
 %% Print Transmission Information
 
-fprintf('---------- Environment Information ----------\n');
-fprintf('AWGN Channel\n');
+fprintf('AWGN Channel, NRZ Code\n');
 fprintf('Baseband Equivalent\n');
+fprintf('Data Error Gaussian Distributed\n\n')
+
+fprintf('---------- Environment Information ----------\n');
 fprintf('SNR = %d dB\n', SNR);
-fprintf('Noise Power = %.3d\n', sigmaN^2);
+fprintf('Signal Power = %d w\n', Ps);
+fprintf('Noise Power for Bits = %.3d w\n\n', sigmaN^2);
 
 
 fprintf('----------- Transmission Settings -----------\n');
