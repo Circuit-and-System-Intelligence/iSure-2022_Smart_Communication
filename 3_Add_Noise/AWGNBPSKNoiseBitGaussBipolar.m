@@ -28,7 +28,7 @@ Feq= Fs / log2(M);                          % Equivalent sampling rate for symbo
 % Define wireless communication environment parameters
 
 % Noise
-Eb_N0 = 0;                                 % Average bit energy to single-sided noise spectrum power (dB)
+Eb_N0 = 0;                                  % Average bit energy to single-sided noise spectrum power (dB)
 Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
 SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 
@@ -36,7 +36,7 @@ SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 %% Signal source
 
 % Generate sending data (Decimal)
-Ndata = 10000;                              % Number of sending datas (Decimalism)
+Ndata = 100000;                              % Number of sending datas (Decimalism)
 dataSend = randi([0, 2^Np - 1], 1, Ndata);  % Sending data (Decimal)
 
 % Convert decimal numbers into binary sequence (1st: MSb -> last: LSB)
@@ -63,9 +63,11 @@ txBbSig = txModSig;
 
 % Calculate signal power
 Ps = sum(txBbSig.^2) / baseLen;
+Eb = Ps / Fs;
+N0 = Eb / (10^(Eb_N0 / 10));
 
 % Generate gaussian white noise
-sigmaN = sqrt(Ps / 10^(SNR / 10) / 2);
+sigmaN = sqrt(N0 / 2 * Fs);
 chanNoise = sigmaN * randn(1, baseLen) + 1i * sigmaN * randn(1, baseLen);
 
 % Signal goes through channel and add noise
@@ -87,8 +89,17 @@ dataRecv = (dataRecvTemp * recVec).';
 
 %% Compute Error
 
-% bitErr = rxBbSig - txModSig;
 bitErr = (rxBbSig + 1) / 2 - txSeq;
+bitErrTemp = rxSeq - txSeq;
+bitErrNum = 0;
+for j = 1 : Nb
+    if bitErrTemp(j) ~= 0
+        bitErrNum = bitErrNum + 1;
+    end
+end
+bitErrRate = bitErrNum / Nb;
+theorBER = qfunc(sqrt(2 * 10^(Eb_N0 / 10)));
+
 dataErr = dataRecv - dataSend;
 
 
@@ -96,19 +107,23 @@ dataErr = dataRecv - dataSend;
 
 fprintf('AWGN Channel, BPSK Mdulation\n');
 fprintf('Baseband Equivalent\n');
-fprintf('Bit Error Gaussian Distributed\n\n')
+fprintf('Bit Error Gaussian Distributed\n')
 
-fprintf('---------- Environment Information ----------\n');
+fprintf('\n---------- Environment Information ----------\n');
 fprintf('SNR = %d dB\n', SNR);
 fprintf('Signal Power = %d w\n', Ps);
-fprintf('Noise Power for Bits = %.3d w\n\n', sigmaN^2);
+fprintf('Noise Power for Bits = %.3d w\n', sigmaN^2);
 
 
-fprintf('----------- Transmission Settings -----------\n');
+fprintf('\n----------- Transmission Settings -----------\n');
 fprintf('Bitrate = %d Hz\n', bitrate);
 fprintf('Number of Data = %d\n', Ndata);
 fprintf('Data Range = 0 ~ %d\n', 2^Np - 1);
 fprintf('Pack Size = %d bits\n', Np);
+
+fprintf('\n----------- Transmission Error -----------\n');
+fprintf('Actual BER = %.5d\n', bitErrRate);
+fprintf('Theoretical BER = %.5d\n', theorBER);
 
 
 %% Plot
