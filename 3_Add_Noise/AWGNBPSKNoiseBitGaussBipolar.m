@@ -7,6 +7,7 @@
 
 % Additional Description:
 %   Ignore large-scale fading
+%   Transmit random sequence
 
 clc
 clear
@@ -74,17 +75,16 @@ chanNoise = sigmaN * randn(1, baseLen) + 1i * sigmaN * randn(1, baseLen);
 rxBbSig = real(txBbSig + chanNoise);
 
 
-%% Demodulate
+%% Receiver
 
+% Demodulation and Detection
 rxSeqTemp = rxBbSig ./ abs(rxBbSig);
 rxSeq = (rxSeqTemp + 1) / 2;
 
-
-%% Recover data
-
-dataRecvTemp = reshape(rxSeq, Np, Ndata).';
-recVec = (2.^(Np - 1 : -1 : 0)).';
-dataRecv = (dataRecvTemp * recVec).';
+% Recover Sequence
+dataRecvTemp = reshape(rxSeq, Np, Ndata);
+recVec = 2.^(Np - 1 : -1 : 0);
+dataRecv = recVec * dataRecvTemp;
 
 
 %% Compute Error
