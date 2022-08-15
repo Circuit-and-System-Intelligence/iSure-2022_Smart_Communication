@@ -28,13 +28,13 @@ Feq= Fs / log2(M);                          % Equivalent sampling rate for symbo
 % Define wireless communication environment parameters
 
 % Noise
-Eb_N0 = -10;                                  % Average bit energy to single-sided noise spectrum power (dB)
+Eb_N0 = 0;                                  % Average bit energy to single-sided noise spectrum power (dB)
 Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
 SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 % Transimitter gain
 idxNp = (1 : Np).';
-gainProp = 2.^(Np * ones(Np, 1) - idxNp);
-% gainProp = [8; 4; 2; 1];
+% gainProp = 2.^(Np * ones(Np, 1) - idxNp);
+gainProp = [1; 1; 1; 1];
 Gt = gainProp * stdAmp;                     % Gain of ith bit in a pack
 % Gt = ones(4, 1);
 
@@ -42,9 +42,9 @@ Gt = gainProp * stdAmp;                     % Gain of ith bit in a pack
 
 % Generate sending data (Decimal)
 Ndata = 100000;                             % Number of sending datas (Decimalism)
-% numTrans = 31;                             % Number to be transmitted
-% dataSend = numTrans * ones(1, Ndata);       % Sending data (Decimal)
-dataSend = randi([0, 2^Np - 1], 1, Ndata);  % Sending data (Decimal)
+numTrans = 0;                               % Number to be transmitted
+dataSend = numTrans * ones(1, Ndata);       % Sending data (Decimal)
+% dataSend = randi([0, 2^Np - 1], 1, Ndata);  % Sending data (Decimal)
 
 % Convert decimal numbers into binary sequence (1st: MSb -> last: LSB)
 Nb = Ndata * Np;                            % Number of bits
