@@ -1,13 +1,11 @@
-% Description:  Test Program for AWGN Channel Model
-%               Adopt BPSK Modulation
-%               For Noise Test
+% Description:  Test Program for Transmission Error Distribution
 % Projet:       Channel Modeling - iSure 2022
 % Date:         Aug 5, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
-%   Ignore large-scale fading
-%   Transmit random sequence
+%   AWGN channel, BPSK modulation
+%   Transmit random data
 
 clc
 clear
