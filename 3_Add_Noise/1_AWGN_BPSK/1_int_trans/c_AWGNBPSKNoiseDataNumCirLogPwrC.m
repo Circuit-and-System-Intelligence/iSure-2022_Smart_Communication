@@ -69,13 +69,13 @@ recvTit = ['Received Data Distribution:  Eb/N0 = ', num2str(Eb_N0), ' dB', ...
         ',  Pack Size = ', num2str(Np)];
 sgtitle(recvTit, 'Fontsize', 16);
 
-% Plot bit error
-errPlt = figure(2);
-errPlt.Name = 'Transmission Error of Different Numbers (AWGN Channel, BPSK Modulation)';
-errPlt.WindowState = 'maximized';
-errTit = ['Error Distribution:  Eb/N0 = ', num2str(Eb_N0), ' dB', ...
-        ',  Pack Size = ', num2str(Np)];
-sgtitle(errTit, 'Fontsize', 16);
+% % Plot bit error
+% errPlt = figure(2);
+% errPlt.Name = 'Transmission Error of Different Numbers (AWGN Channel, BPSK Modulation)';
+% errPlt.WindowState = 'maximized';
+% errTit = ['Error Distribution:  Eb/N0 = ', num2str(Eb_N0), ' dB', ...
+%         ',  Pack Size = ', num2str(Np)];
+% sgtitle(errTit, 'Fontsize', 16);
 
 
 %% Transmission Iteration
@@ -164,14 +164,14 @@ for i = 1 : 2^Np
     titText = ['Number: ', num2str(i - 1)];
     title(titText, 'FontSize', 16);
 
-    % Plot error distribution
-    figure(errPlt);
-    subplot(pltRow, pltLine, pltPos);
-    histogram(dataErr, 'Normalization', 'pdf', 'BinMethod', 'integers');
-    xlabel('Magnitude');
-    ylabel('PDF');
-    titText = ['Number: ', num2str(i - 1)];
-    title(titText, 'FontSize', 16);
+%     % Plot error distribution
+%     figure(errPlt);
+%     subplot(pltRow, pltLine, pltPos);
+%     histogram(dataErr, 'Normalization', 'pdf', 'BinMethod', 'integers');
+%     xlabel('Magnitude');
+%     ylabel('PDF');
+%     titText = ['Number: ', num2str(i - 1)];
+%     title(titText, 'FontSize', 16);
 
 end
 
