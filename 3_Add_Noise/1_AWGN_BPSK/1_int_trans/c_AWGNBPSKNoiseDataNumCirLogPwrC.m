@@ -1,12 +1,12 @@
 % Description:  Test Program for Transmission Error Distribution
 % Projet:       Channel Modeling - iSure 2022
-% Date:         Aug 13, 2022
+% Date:         Aug 14, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
 %   AWGN channel, BPSK modulation
 %   Transmit single data and iterate through all number within range
-%   Transmission power adjustable
+%   Reduce transmission power of LSB
 
 
 clc
@@ -33,7 +33,6 @@ Eb_N0 = 0;                                  % Average bit energy to single-sided
 Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
 SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 % Transimitter gain
-gainMod = 0;
 gainProp = [1; 0.5; 0.25; 0.125];
 Gt = gainProp * stdAmp;                     % Gain of ith bit in a pack
 
@@ -58,7 +57,7 @@ fprintf('Pack Size = %d bits\n', Np);
 %% Plot Settings
 
 % Define some parameters
-pltLine = 2^2;
+pltLine = 2;
 pltRow = 2^Np / pltLine;
 recvRange = [-1, 2^Np];
 
@@ -66,14 +65,16 @@ recvRange = [-1, 2^Np];
 recvPlt = figure(1);
 recvPlt.Name = 'Received Data of Different Numbers (AWGN Channel, BPSK Modulation)';
 recvPlt.WindowState = 'maximized';
-recvTit = ['Eb/N0 = ', num2str(Eb_N0), ' dB,  Pack Size = ', num2str(Np)];
+recvTit = ['Received Data Distribution:  Eb/N0 = ', num2str(Eb_N0), ' dB', ...
+        ',  Pack Size = ', num2str(Np)];
 sgtitle(recvTit, 'Fontsize', 16);
 
 % Plot bit error
 errPlt = figure(2);
 errPlt.Name = 'Transmission Error of Different Numbers (AWGN Channel, BPSK Modulation)';
 errPlt.WindowState = 'maximized';
-errTit = ['Eb/N0 = ', num2str(Eb_N0), ' dB,  Pack Size = ', num2str(Np)];
+errTit = ['Error Distribution:  Eb/N0 = ', num2str(Eb_N0), ' dB', ...
+        ',  Pack Size = ', num2str(Np)];
 sgtitle(errTit, 'Fontsize', 16);
 
 
@@ -156,20 +157,20 @@ for i = 1 : 2^Np
     % Plot received data distribution
     figure(recvPlt);
     subplot(pltRow, pltLine, pltPos);
-    histogram(dataRecv, 2^(Np + 1), 'Normalization', 'pdf', 'BinMethod', 'integers', ...
+    histogram(dataRecv, 'Normalization', 'pdf', 'BinMethod', 'integers', ...
             'BinLimits', recvRange);
     xlabel('Magnitude');
     ylabel('PDF');
-    titText = ['Received Data (Number: ', num2str(i - 1), ')'];
+    titText = ['Number: ', num2str(i - 1)];
     title(titText, 'FontSize', 16);
 
     % Plot error distribution
     figure(errPlt);
     subplot(pltRow, pltLine, pltPos);
-    histogram(dataErr, 2^(Np + 1), 'Normalization', 'pdf', 'BinMethod', 'integers');
+    histogram(dataErr, 'Normalization', 'pdf', 'BinMethod', 'integers');
     xlabel('Magnitude');
     ylabel('PDF');
-    titText = ['Error Distribution (Number: ', num2str(i - 1), ')'];
+    titText = ['Number: ', num2str(i - 1)];
     title(titText, 'FontSize', 16);
 
 end
@@ -179,7 +180,6 @@ end
 
 txPwr = figure(3);
 txPwr.Name = 'Transmission Power Variation';
-txPwr.WindowState = 'maximized';
 
 pwrTx = 10 * log10(gainVar.^2);
 plot(pwrTx(1 : 10 * Np), 'Color', '#D95319', 'LineWidth', 1.5);
