@@ -1,10 +1,10 @@
 % Description:  Test Program for Transmission Error Distribution
 % Projet:       Channel Modeling - iSure 2022
-% Date:         Aug 7, 2022
+% Date:         Aug 14, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
-%   AWGN channel, BPSK modulation
+%   Rayleigh fading channel, BPSK modulation
 %   Transmit random data or single number
 %   Transmission power adjustable
 
@@ -27,15 +27,20 @@ sps = Fs / Fsym;                            % Samples per symbol
 Feq= Fs / log2(M);                          % Equivalent sampling rate for symbols (Hz)
 
 % Define wireless communication environment parameters
-
+% Small-Scale fading
+Nw = 98;                                    % Number of scattered plane waves arriving at the receiver
+fm = 50;                                    % Maximum doppler shift (Hz)
+t0 = 0;                                     % Initial time (s)
+phiN = 0;                                   % Initial phase of signal with maximum doppler shift (rad)
 % Noise
 Eb_N0 = 0;                                  % Average bit energy to single-sided noise spectrum power (dB)
 Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
 SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 % Transimitter gain
-idxNp = (1 : Np).';
+% idxNp = (1 : Np).';
 % gainProp = 2.^(Np * ones(Np, 1) - idxNp);
-gainProp = [1; 1; 0.2; 0.125];
+% gainProp = ones(1, Np);
+gainProp = [1; 0.5; 0.25; 0.125];
 Gt = gainProp * stdAmp;                     % Gain of ith bit in a pack
 % Gt = ones(4, 1);
 
@@ -76,7 +81,11 @@ for i = 1 : Np
 end
 
 
-%% Add Noise
+%% Channel Effects
+
+% Go through Rayleigh fading channel
+h0 = RayleighFadingChannel(Nw, fm, baseLen, Feq, t0, phiN);
+txChanSig = txBbSig .* h0;
 
 % Calculate signal power
 Ps = sum(txModSig.^2) / baseLen;
@@ -87,8 +96,11 @@ N0 = Eb / (10^(Eb_N0 / 10));
 sigmaN = sqrt(N0 / 2 * Fs);
 chanNoise = sigmaN * randn(1, baseLen) + 1i * sigmaN * randn(1, baseLen);
 
-% Signal goes through channel and add noise
-rxBbSig = real(txBbSig + chanNoise);
+% Add noise
+rxChanSig = txChanSig + chanNoise;
+
+% Channel estimation
+rxBbSig = real(rxChanSig ./ h0);
 
 
 %% Receiver
@@ -113,7 +125,8 @@ for j = 1 : Nb
     end
 end
 bitErrRate = bitErrNum / Nb;
-theorBER = qfunc(sqrt(2 * 10^(Eb_N0 / 10)));
+Eb_N0_U = 10^(Eb_N0 / 10);
+theorBER = 0.5 * (1 - sqrt(Eb_N0_U / (1 + Eb_N0_U)));
 
 bitErr = rxBbSig - txBbSig;
 dataErr = dataRecv - dataSend;
@@ -158,13 +171,13 @@ ylabel('Error / V');
 subplot(3, 2, 2)
 hold on
 histogram(bitErr, 2^(Np + 1), 'Normalization', 'pdf');
-distMag = -4 * sigmaN : 0.01 : 4 * sigmaN;
-idealMagPdf = normpdf(distMag, 0, sigmaN);
-plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 1.5);
+% distMag = -4 * sigmaN : 0.01 : 4 * sigmaN;
+% idealMagPdf = normpdf(distMag, 0, sigmaN);
+% plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 1.5);
 xlabel('Magnitude');
 ylabel('PDF');
 title('Bit Error Distribution', 'FontSize', 16);
-legend('Simulation', 'Ideal');
+% legend('Simulation', 'Ideal');
 hold off
 
 subplot(3, 2, 3);
