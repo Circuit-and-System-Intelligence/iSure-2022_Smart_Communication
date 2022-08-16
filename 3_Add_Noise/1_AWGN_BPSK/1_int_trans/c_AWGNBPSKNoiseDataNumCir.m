@@ -69,14 +69,14 @@ recvRange = [-1, 2^Np];
 recvPlt = figure(1);
 recvPlt.Name = 'Received Data of Different Numbers (AWGN Channel, BPSK Modulation)';
 recvPlt.WindowState = 'maximized';
-recvTit = ['Eb/N0 = ', num2str(Eb_N0), 'dB,  Pack Size = ', num2str(Np)];
+recvTit = ['Eb/N0 = ', num2str(Eb_N0), ' dB,  Pack Size = ', num2str(Np)];
 sgtitle(recvTit, 'Fontsize', 16);
 
 % Plot bit error
 errPlt = figure(2);
 errPlt.Name = 'Transmission Error of Different Numbers (AWGN Channel, BPSK Modulation)';
 errPlt.WindowState = 'maximized';
-errTit = ['Eb/N0 = ', num2str(Eb_N0), 'dB,  Pack Size = ', num2str(Np)];
+errTit = ['Eb/N0 = ', num2str(Eb_N0), ' dB,  Pack Size = ', num2str(Np)];
 sgtitle(errTit, 'Fontsize', 16);
 
 

@@ -33,7 +33,8 @@ Eb_N0 = 0;                                  % Average bit energy to single-sided
 Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
 SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 % Transimitter gain
-gainProp = ones(1, Np);
+gainMod = 0;
+gainProp = [1; 1; 0.5; 0.25];
 Gt = gainProp * stdAmp;                     % Gain of ith bit in a pack
 
 
