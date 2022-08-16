@@ -19,7 +19,7 @@ close all
 % Define baseband parameters
 bitrate = 100000;                           % Bitrate (Hz)
 stdAmp = 1;                                 % Amplitude of transmission bits (V)
-Np = 4;                                     % Number of bits in a package
+Np = 5;                                     % Number of bits in a package
 Ndata = 100000;                             % Number of sending datas (Decimalism)
 Fs = bitrate;                               % Sampling rate (Hz)
 M = 2;                                      % Modulation order
@@ -36,7 +36,7 @@ SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 % Transimitter gain
 idxNp = (1 : Np).';
 % gainProp = 2.^(Np * ones(Np, 1) - idxNp);
-gainProp = [1; 0.5; 0.25; 0.125];
+gainProp = [1; 1; 1; 0.25; 0.125];
 Gt = gainProp * stdAmp;                     % Gain of ith bit in a pack
 % Gt = ones(4, 1);
 
@@ -62,7 +62,7 @@ fprintf('Pack Size = %d bits\n', Np);
 transErrPlt = figure(1);
 transErrPlt.Name = 'Transmission Error of Different Numbers (AWGN Channel, BPSK Modulation)';
 transErrPlt.WindowState = 'maximized';
-pltLine = 2^2;
+pltLine = 2^3;
 pltRow = 2^Np / pltLine;
 
 

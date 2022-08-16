@@ -20,6 +20,7 @@ close all
 bitrate = 100000;                           % Bitrate (Hz)
 stdAmp = 1;                                 % Amplitude of transmission bits (V)
 Np = 4;                                     % Number of bits in a package
+Ndata = 100000;                             % Number of sending datas (Decimalism)
 Fs = bitrate;                               % Sampling rate (Hz)
 M = 2;                                      % Modulation order
 Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
@@ -32,10 +33,16 @@ Feq= Fs / log2(M);                          % Equivalent sampling rate for symbo
 Eb_N0 = 0;                                  % Average bit energy to single-sided noise spectrum power (dB)
 Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
 SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
-% Transimitter gain
-idxNp = (1 : Np).';
-% gainProp = 2.^(Np * ones(Np, 1) - idxNp);
-% gainProp = [1; 1; 1; 1];
+
+
+%% Allocate Transmission Power
+
+% Calculate some transmission characteristics parameters
+theorBER = qfunc(sqrt(2 * 10^(Eb_N0 / 10)));
+numTrans = 2;                               % Number to be transmitted
+
+% Calculate transimitter gain
+
 gainProp = [1; 0.5; 0.25; 0.5];
 Gt = gainProp * stdAmp;                     % Gain of ith bit in a pack
 % Gt = ones(4, 1);
@@ -43,10 +50,7 @@ Gt = gainProp * stdAmp;                     % Gain of ith bit in a pack
 %% Signal source
 
 % Generate sending data (Decimal)
-Ndata = 100000;                             % Number of sending datas (Decimalism)
-numTrans = 2;                               % Number to be transmitted
 dataSend = numTrans * ones(1, Ndata);       % Sending data (Decimal)
-% dataSend = randi([0, 2^Np - 1], 1, Ndata);  % Sending data (Decimal)
 
 % Convert decimal numbers into binary sequence (1st: MSb -> last: LSB)
 Nb = Ndata * Np;                            % Number of bits
@@ -114,7 +118,6 @@ for j = 1 : Nb
     end
 end
 bitErrRate = bitErrNum / Nb;
-theorBER = qfunc(sqrt(2 * 10^(Eb_N0 / 10)));
 
 bitErr = rxBbSig - txBbSig;
 dataErr = dataRecv - dataSend;
