@@ -1,12 +1,12 @@
 % Description:  Test Program for Transmission Error Distribution
 % Projet:       Channel Modeling - iSure 2022
-% Date:         Aug 14, 2022
+% Date:         Aug 13, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
 %   AWGN channel, BPSK modulation
 %   Transmit single data and iterate through all number within range
-%   Allocate transmission power to fit each number
+%   Transmission power adjustable
 
 
 clc
@@ -28,13 +28,13 @@ sps = Fs / Fsym;                            % Samples per symbol
 Feq= Fs / log2(M);                          % Equivalent sampling rate for symbols (Hz)
 
 % Define wireless communication environment parameters
-
 % Noise
 Eb_N0 = 0;                                  % Average bit energy to single-sided noise spectrum power (dB)
 Es_N0 = log10(log2(M)) + Eb_N0;             % Average symbol energy to single-sided noise spectrum power (dB)
 SNR = 10 * log10(Fsym / Fs) + Es_N0;        % Signal-to-noise ratio (dB)
 % Transimitter gain
-idxNp = (1 : Np).';
+% gainProp = ones(1, Np);
+% idxNp = (1 : Np).';
 % gainProp = 2.^(Np * ones(Np, 1) - idxNp);
 gainProp = [1; 0.5; 0.25; 0.125];
 Gt = gainProp * stdAmp;                     % Gain of ith bit in a pack
@@ -48,6 +48,7 @@ fprintf('Baseband Equivalent\n');
 fprintf('Bit Error Gaussian Distributed\n')
 
 fprintf('\n---------- Environment Information ----------\n');
+fprintf('Eb/N0 = %d dB\n', Eb_N0);
 fprintf('SNR = %d dB\n', SNR);
 
 fprintf('\n----------- Transmission Settings -----------\n');
@@ -58,12 +59,25 @@ fprintf('Pack Size = %d bits\n', Np);
 
 
 %% Plot Settings
-% Plot bit error
-transErrPlt = figure(1);
-transErrPlt.Name = 'Transmission Error of Different Numbers (AWGN Channel, BPSK Modulation)';
-transErrPlt.WindowState = 'maximized';
+
+% Define some parameters
 pltLine = 2^2;
 pltRow = 2^Np / pltLine;
+recvRange = [-1, 2^Np];
+
+% Plot received data
+recvPlt = figure(1);
+recvPlt.Name = 'Received Data of Different Numbers (AWGN Channel, BPSK Modulation)';
+recvPlt.WindowState = 'maximized';
+recvTit = ['Eb/N0 = ', num2str(Eb_N0), 'dB,  Pack Size = ', num2str(Np)];
+sgtitle(recvTit, 'Fontsize', 16);
+
+% Plot bit error
+errPlt = figure(2);
+errPlt.Name = 'Transmission Error of Different Numbers (AWGN Channel, BPSK Modulation)';
+errPlt.WindowState = 'maximized';
+errTit = ['Eb/N0 = ', num2str(Eb_N0), 'dB,  Pack Size = ', num2str(Np)];
+sgtitle(errTit, 'Fontsize', 16);
 
 
 %% Transmission Iteration
@@ -129,7 +143,7 @@ for i = 1 : 2^Np
     % Recover Sequence
     dataRecvTemp = reshape(rxSeq, Np, Ndata);
     recVec = 2.^(Np - 1 : -1 : 0);
-    dataRecv = recVec * dataRecvTemp;    
+    dataRecv = recVec * dataRecvTemp;
     
 
     %%% Plot
@@ -137,25 +151,36 @@ for i = 1 : 2^Np
     % Calculate error
     dataErr = dataRecv - dataSend;
 
-    % Plot error distribution
+    % Calculate the subplot serial number
     posRow = mod(i - 1, pltRow) + 1;
     posLine = fix((i - 1) / pltRow) + 1;
     pltPos = (posRow - 1) * pltLine + posLine;
+
+    % Plot received data distribution
+    figure(recvPlt);
     subplot(pltRow, pltLine, pltPos);
-    histogram(dataErr, 2^(Np + 1), 'Normalization', 'pdf');
+    histogram(dataRecv, 2^(Np + 1), 'Normalization', 'pdf', 'BinMethod', 'integers', ...
+            'BinLimits', recvRange);
     xlabel('Magnitude');
     ylabel('PDF');
-    titText = ['Error Distribution (Transmitted Number: ', num2str(i - 1), ')'];
+    titText = ['Received Data (Number: ', num2str(i - 1), ')'];
+    title(titText, 'FontSize', 16);
+
+    % Plot error distribution
+    figure(errPlt);
+    subplot(pltRow, pltLine, pltPos);
+    histogram(dataErr, 2^(Np + 1), 'Normalization', 'pdf', 'BinMethod', 'integers');
+    xlabel('Magnitude');
+    ylabel('PDF');
+    titText = ['Error Distribution (Number: ', num2str(i - 1), ')'];
     title(titText, 'FontSize', 16);
 
 end
 
-geneTit = ['Eb/N0 = ', num2str(Eb_N0), ', Pack Size = ', num2str(Np)];
-sgtitle(geneTit, 'Fontsize', 16);
 
 %% Plot Transmission Power Variation
 
-txPwr = figure(2);
+txPwr = figure(3);
 txPwr.Name = 'Transmission Power Variation';
 txPwr.WindowState = 'maximized';
 
