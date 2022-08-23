@@ -1,13 +1,3 @@
-% Description:  Plot Data Error Distribution Variation with Changing
-%               Dominant Bit
-% Projet:       Channel Modeling - iSure 2022
-% Date:         Aug 20, 2022
-% Author:       Zhiyu Shen
-
-% Additional Description:
-%   AWGN channel, BPSK modulation
-%   Transmit random data uniformly distributted
-
 close all
 clear
 clc

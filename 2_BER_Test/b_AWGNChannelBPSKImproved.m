@@ -13,7 +13,7 @@ close all
 
 % Define baseband parameters
 bitrate = 10000;                            % Bitrate (Hz)
-sigAmp = 1;                                 % Amplitude of transmission bits (V)
+Gstd = 1;                                   % Amplitude of transmission bits (V)
 Fs = 1e6;                                   % Sampling rate (Hz)
 M = 2;                                      % Modulation order
 Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
@@ -21,19 +21,19 @@ sps = Fs / Fsym;                            % Samples per symbol
 Feq= Fs / log2(M);                          % Equivalent sampling rate for symbols (Hz)
 
 % Noise
-Eb_N0 = -10 : 0.5 : 30;                     % Average bit energy to single-sided noise spectrum density (dB)
+Eb_N0 = -10 : 0.5 : 20;                     % Average bit energy to single-sided noise spectrum density (dB)
 SNR = 10 * log10(Fsym / Fs) + Eb_N0;        % Signal-to-noise ratio
-
+SNR_U = 10.^(SNR / 10);
 
 %% Signal source
-Nb = 50000;                                 % Number of sending bits
+Nb = 100000;                                % Number of sending bits
 txSeq = randi([0, 1], 1, Nb);               % Binary sending sequence (0 and 1 seq)
 
 
 %% Baseband Modulation
 
 % BPSK baeband modulation （No phase rotation)
-txModSig = 2 * (0.5 - txSeq) * sigAmp;
+txModSig = 2 * (0.5 - txSeq) * Gstd;
 
 
 %% Baseband Shaping
@@ -58,13 +58,14 @@ baseLen = length(txBbSig);
 
 %% AWGN Channel
 
-bitErrRate = zeros(1, length(SNR));
-theorBER = zeros(1, length(SNR));
+measBER = zeros(1, length(Eb_N0));
+theoBER = zeros(1, length(Eb_N0));
+apprBER = zeros(1, length(Eb_N0));
 
-for i = 1 : length(SNR)
+for i = 1 : length(Eb_N0)
 
     % Generate gaussian white noise
-    sigmaN = sqrt(sigAmp^2 / 10^(SNR(i) / 10) / 2);
+    sigmaN = sqrt(Gstd^2 / SNR_U(i) / 2);
     chanNoise = sigmaN * (randn(1, baseLen) + 1i* randn(1, baseLen));
 
     % Signal goes through channel and add noise
@@ -94,8 +95,9 @@ for i = 1 : length(SNR)
             bitErrNum = bitErrNum + 1;
         end
     end
-    bitErrRate(i) = bitErrNum / Nb;
-    theorBER(i) = qfunc(sqrt(2 * 10^(SNR(i) / 10)));
+    measBER(i) = bitErrNum / Nb;
+    theoBER(i) = qfunc(sqrt(2 * SNR_U(i)));
+    apprBER(i) = exp(-SNR_U(i)) / 4;
 
 end
 
@@ -121,22 +123,23 @@ figBer.Name = 'BER Test for AWGN Channel wuth BPSK Modulation';
 figBer.WindowState = 'maximized';
 
 subplot(2, 1, 1);
-semilogy(nEbn0, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
+semilogy(nEbn0, theoBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
 hold on
-semilogy(nEbn0, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
+semilogy(nEbn0, apprBER, "LineWidth", 2, "Color", "#77AC30", "Marker", ".");
+semilogy(nEbn0, measBER, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
 title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in dB)", ...
     "FontSize", 16);
 xlabel("Eb/N0 / dB", "FontSize", 16);
 ylabel("BER", "FontSize", 16);
-legend("Theoretical BER", "Actual BER", "Fontsize", 16);
+legend("Theoretical BER", "Approximate BER", "Measured BER", "Fontsize", 16);
 hold off
 grid on
 box on
 
 subplot(2, 1, 2);
-semilogy(nUnit, theorBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
+semilogy(nUnit, theoBER, "LineWidth", 2, "Color", "#0072BD", "Marker", "x");
 hold on
-semilogy(nUnit, bitErrRate, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
+semilogy(nUnit, measBER, "LineWidth", 2, "Color", "#D95319", "Marker", "*");
 title("BER Characteristic of AWGN Channel with BPSK Modulation (SNR in unit)", ...
     "FontSize", 16);
 xlabel("Eb/N0", "FontSize", 16);

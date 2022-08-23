@@ -1,14 +1,12 @@
 % Description:  Test Program for Transmission Error Distribution
 % Projet:       Channel Modeling - iSure 2022
-% Date:         Aug 17, 2022
+% Date:         Aug 22, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
 %   AWGN channel, BPSK modulation
 %   Transmit random data uniformly distributted
 %   Allocate transmission power in a logrithmatic way
-%   Look into the affect on received data error cause by power reduction
-
 
 clc
 clear
@@ -30,16 +28,17 @@ Feq = Fs / log2(M);                         % Equivalent sampling rate for symbo
 % Define wireless communication environment parameters
 
 % Signal-to-noise ratio
-Eb_N0 = 0;                                 % Average bit energy to single-sided noise spectrum power (dB)
+Eb_N0 = 0;                                  % Average bit energy to single-sided noise spectrum power (dB)
 Eb_N0_U = 10^(Eb_N0 / 10);
 % Transimitter gain (Take MSB for reference bit)
 idxNp = (Np : -1 : 1).';
 % gainProp = 2.^(ones(Np, 1) - idxNp);
-gainProp = [1; 1; 0.0625; 0.125];
-% gainProp = [1; 1; 1; 1; 1; 1; 0.125; 0.125];
-% gainProp = ones(Np, 1);
-Gt = gainProp * Gstd;                     % Gain of ith bit in a pack
+gainProp = [1; 1 / 2; 1 / 4; 1 / 8];
+Gt = gainProp * Gstd;                       % Gain of ith bit in a pack
 
+% Data error-related parameters
+minErr = 0.03;                              % Minimal data error counts
+maxErrProp = 1.5;                           % Propotion between the probability of two adjacent data errors
 
 %% Signal source
 
@@ -133,8 +132,28 @@ theorBER = qfunc(sqrt(2 * trueEbN0));
 distMag = -4 * sigmaN : 0.01 : 4 * sigmaN;
 idealMagPdf = normpdf(distMag, 0, sigmaN);
 
-% Calculate ideal data error distribution
 
+%% Calculate Data Error Distribution
+
+% Calculate data error distribution
+pn = FreqCal(dataErr, Np);
+
+% Calculate distribution range
+errVal = 0;                         % Current error value
+pnIdx = errVal + 2^Np;              % The index of the current error value
+errProb = pn(pnIdx);                % Probability of current error value
+errProp = 0;                        % The ratio of probability of last error value and current one
+
+while (errProb > minErr) && (errProp < maxErrProp)
+    errVal = errVal + 1;            % Update current error value with next one
+    pnIdx = errVal + 2^Np;          % Index of the error value
+    errProbPrev = errProb;          % Update probability of previous error value
+    errProb = pn(pnIdx);            % Update probability of current error value
+    errProp = errProbPrev / errProb;% The ratio of probability of last error value and current one
+end
+
+errLb = -errVal + 1;
+errUb = errVal - 1;
 
 %% Print Transmission Information
 
@@ -157,12 +176,12 @@ fprintf('\n----------- Power Allocation -----------\n');
 pwrWatt = Gt.^2;
 pwrLog = 10 * log10(pwrWatt * 1000);
 pwrPrt = [idxNp, pwrWatt, pwrLog].';
-fprintf('Bit number %d: Transmission power = %.5f W = %.2f dBm\n', pwrPrt);
+fprintf('Bit number %d: Transmission power = %.5e W = %.2f dBm\n', pwrPrt);
 
 fprintf('\n----------- True Eb/N0 -----------\n');
 ebn0Log = 10 * log10(trueEbN0);
 ebn0Prt = [idxNp, trueEbN0, ebn0Log].';
-fprintf('Bit number %d: Eb/N0 = %.5f = %.2f dB\n', ebn0Prt);
+fprintf('Bit number %d: Eb/N0 = %.5e = %.2f dB\n', ebn0Prt);
 
 fprintf('\n----------- Transmission Error -----------\n');
 berPrt = [idxNp, theorBER, measBER].';
@@ -173,28 +192,29 @@ fprintf('Bit number %d: Theoretical = %.3e, Measured = %.3e\n', ...
 
 %% Plot
 
-% Transmit power variation figure settings
-txPwrPlt = figure(1);
-txPwrPlt.Name = 'Transmission Data Error for AWGN channel with BPSK Modulation';
-txPwrPlt.WindowState = 'maximized';
-% Plot transmit power variation
-txPwrLog = 10 * log10(txPwr * 1000);
-plot(txPwrLog(1 : 10 * Np), 'Color', '#D95319', 'LineWidth', 2);
-title('Transmission Power Variation (Partial Bits)');
-xlabel('Bit index');
-ylabel('Power / dBm');
-set(gca, 'Fontsize', 20, 'Linewidth', 2);
-
 % Data error distribution figure settings
-dataErrPlt = figure(2);
+dataErrPlt = figure(1);
 dataErrPlt.Name = 'Transmission Data Error for AWGN channel with BPSK Modulation';
 dataErrPlt.WindowState = 'maximized';
+
 % Plot data error distribution (Measured)
 histogram(dataErr, 2^(Np + 1), 'Normalization', 'probability', 'BinMethod', 'integers');
-xlabel('Magnitude of receivde bis');
+xlabel('Magnitude of receivde bits');
 ylabel('Occurrence probability');
 title('Data Error Distribution');
 set(gca, 'Fontsize', 20, 'Linewidth', 2);
+
+
+lapFitPlt = figure(2);
+lapFitPlt.Name = 'Laplace Fit';
+lapFitPlt.WindowState = 'maximized';
+histfitlaplace(dataErr)
+grid on
+set(gca, 'FontName', 'Times New Roman', 'FontSize', 14)
+xlabel('Amplitude')
+ylabel('Number of samples')
+title('Amplitude distribution of the random signal')
+legend('Distribution of the signal', 'PDF of the Laplace distribution')
 
 
 
