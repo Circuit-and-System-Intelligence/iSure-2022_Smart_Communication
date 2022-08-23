@@ -4,19 +4,19 @@ clc
 
 Np = 4;
 
-load("./dominant_bit_different_pos/pwr_16_1.mat", "dataErr");
+load("./pwr_16_1.mat", "dataErr");
 dataErrA = dataErr;
 clear dataErr;
 
-load("./dominant_bit_different_pos/pwr_16_2.mat", "dataErr");
+load("./pwr_16_2.mat", "dataErr");
 dataErrB = dataErr;
 clear dataErr;
 
-load("./dominant_bit_different_pos/pwr_16_3.mat", "dataErr");
+load("./pwr_16_3.mat", "dataErr");
 dataErrC = dataErr;
 clear dataErr;
 
-load("./dominant_bit_different_pos/pwr_16_4.mat", "dataErr");
+load("./pwr_16_4.mat", "dataErr");
 dataErrD = dataErr;
 clear dataErr;
 
