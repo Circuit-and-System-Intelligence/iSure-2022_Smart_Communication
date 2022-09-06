@@ -1,0 +1,20 @@
+function LaplaceFit(X)
+% 
+% Laplace distribution fit
+% 
+% Author:  Zhiyu Shen
+% Date:    Aug 30, 2022
+% Project: Channel Modeling - iSure 2022
+%
+% Input Argument:
+%   @X: Sequence to be fitted
+% 
+% Output Argument:
+%   @pn: Probability dencity function of data error
+%
+
+N = length(X);
+mu = sum(X) / N;
+sigma = X - 
+
+end

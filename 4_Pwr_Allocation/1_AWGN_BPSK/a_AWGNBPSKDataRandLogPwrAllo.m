@@ -18,7 +18,7 @@ close all
 % Define baseband parameters
 bitrate = 100000;                           % Bitrate (Hz)
 Gstd = 1;                                   % Standard transmission gain
-Np = 4;                                     % Number of bits in a package
+Np = 2;                                     % Number of bits in a package
 Fs = bitrate;                               % Sampling rate (Hz)
 M = 2;                                      % Modulation order
 Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
@@ -32,8 +32,11 @@ Eb_N0 = 0;                                  % Average bit energy to single-sided
 Eb_N0_U = 10^(Eb_N0 / 10);
 % Transimitter gain (Take MSB for reference bit)
 idxNp = (Np : -1 : 1).';
-% gainProp = 2.^(ones(Np, 1) - idxNp);
-gainProp = [1; 1 / 2; 1 / 4; 1 / 8];
+% gainProp = 2.^(idxNp - Np);
+gainProp = exp(idxNp - Np);
+gainProp(1) = 2 * gainProp(1);
+% gainProp = [1; 1 / 2; 1 / 4; 1 / 8];
+% gainProp = [1; 1 / 2];
 Gt = gainProp * Gstd;                       % Gain of ith bit in a pack
 
 % Data error-related parameters
@@ -79,11 +82,11 @@ txPwr = abs(txBbSig.^2);
 % Calculate signal power
 Ps = Gstd^2;
 Eb = Ps / Fs;
-N0 = Eb / (10^(Eb_N0 / 10));
+N0 = Eb / (10^(Eb_N0/10));
 
 % Generate gaussian white noise
-sigmaN = sqrt(N0 / 2 * Fs);
-chanNoise = sigmaN * randn(1, baseLen) + 1i * sigmaN * randn(1, baseLen);
+sigmaN = sqrt(N0*Fs/2);
+chanNoise = sigmaN*randn(1, baseLen) + 1i*sigmaN*randn(1, baseLen);
 
 % Signal goes through channel and add noise
 rxBbSig = real(txBbSig + chanNoise);
@@ -190,32 +193,34 @@ fprintf('Bit number %d: Theoretical = %.3e, Measured = %.3e\n', ...
         berPrt);
 
 
-%% Plot
+% %% Plot
+% 
+% % Data error distribution figure settings
+% dataErrPlt = figure(1);
+% dataErrPlt.Name = 'Transmission Data Error for AWGN channel with BPSK Modulation';
+% dataErrPlt.WindowState = 'maximized';
+% 
+% % Plot data error distribution (Measured)
+% histogram(dataErr, 2^(Np + 1), 'Normalization', 'probability', 'BinMethod', 'integers');
+% xlabel('Magnitude of receivde bits');
+% ylabel('Occurrence probability');
+% title('Data Error Distribution');
+% set(gca, 'Fontsize', 20, 'Linewidth', 2);
+% 
+% % Laplace fit in settings
+% lapFitPlt = figure(2);
+% lapFitPlt.Name = 'Laplace Fit';
+% lapFitPlt.WindowState = 'maximized';
+% 
+% % Plot data error distribution (Measured)
+% histfitlaplace(dataErr)
+% grid on
+% set(gca, 'FontName', 'Times New Roman', 'FontSize', 14)
+% xlabel('Amplitude')
+% ylabel('Number of samples')
+% title('Amplitude distribution of the random signal')
+% legend('Distribution of the signal', 'PDF of the Laplace distribution')
 
-% Data error distribution figure settings
-dataErrPlt = figure(1);
-dataErrPlt.Name = 'Transmission Data Error for AWGN channel with BPSK Modulation';
-dataErrPlt.WindowState = 'maximized';
-
-% Plot data error distribution (Measured)
-histogram(dataErr, 2^(Np + 1), 'Normalization', 'probability', 'BinMethod', 'integers');
-xlabel('Magnitude of receivde bits');
-ylabel('Occurrence probability');
-title('Data Error Distribution');
-set(gca, 'Fontsize', 20, 'Linewidth', 2);
-
-
-lapFitPlt = figure(2);
-lapFitPlt.Name = 'Laplace Fit';
-lapFitPlt.WindowState = 'maximized';
-histfitlaplace(dataErr)
-grid on
-set(gca, 'FontName', 'Times New Roman', 'FontSize', 14)
-xlabel('Amplitude')
-ylabel('Number of samples')
-title('Amplitude distribution of the random signal')
-legend('Distribution of the signal', 'PDF of the Laplace distribution')
-
-
+LaplaceFit(dataErr, Np);
 
 

@@ -1,6 +1,6 @@
 % Description:  Test Program for Transmission Error Distribution
 % Projet:       Channel Modeling - iSure 2022
-% Date:         Aug 22, 2022
+% Date:         Aug 28, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
@@ -27,18 +27,26 @@ Feq = Fs / log2(M);                         % Equivalent sampling rate for symbo
 
 % Define wireless communication environment parameters
 
+% Small-Scale fading
+Nw = 34;                                    % Number of scattered plane waves arriving at the receiver
+fm = 50;                                    % Maximum doppler shift (Hz)
+t0 = 0;                                     % Initial time (s)
+phiN = 0;                                   % Initial phase of signal with maximum doppler shift (rad)
+
 % Signal-to-noise ratio
 Eb_N0 = 0;                                  % Average bit energy to single-sided noise spectrum power (dB)
 Eb_N0_U = 10^(Eb_N0 / 10);
 % Transimitter gain (Take MSB for reference bit)
 idxNp = (Np : -1 : 1).';
-% gainProp = 2.^(ones(Np, 1) - idxNp);
-gainProp = [1; 1; 1 / 10; 1 / 10];
+gainProp = 2.^(idxNp - Np);
+% gainProp = exp(idxNp - Np);
+% gainProp = [1; 1; 1 / 10; 1 / 10];
 Gt = gainProp * Gstd;                       % Gain of ith bit in a pack
 
 % Data error-related parameters
 minErr = 0.03;                              % Minimal data error counts
 maxErrProp = 1.5;                           % Propotion between the probability of two adjacent data errors
+
 
 %% Signal source
 
@@ -135,7 +143,7 @@ dataErr = dataRecv - dataSend;
 
 % Calculate the actual theoretical BER for each bit
 trueEbN0 = Eb_N0_U * (Gt / Gstd).^2;
-theorBER = qfunc(sqrt(2 * trueEbN0));
+theorBER = 0.5 * (1 - sqrt(trueEbN0 ./ (1 + trueEbN0)));
 
 % Calculate ideal bit error distribution
 distMag = -4 * sigmaN : 0.01 : 4 * sigmaN;
@@ -166,7 +174,7 @@ errUb = errVal - 1;
 
 %% Print Transmission Information
 
-fprintf('AWGN Channel, BPSK Mdulation\n');
+fprintf('Rayleigh Fading Channel, BPSK Mdulation\n');
 fprintf('Baseband Equivalent\n');
 fprintf('Bit Error Gaussian Distributed\n')
 
@@ -199,19 +207,8 @@ fprintf('Bit number %d: Theoretical = %.3e, Measured = %.3e\n', ...
         berPrt);
 
 
-%% Plot
-
-% Data error distribution figure settings
-dataErrPlt = figure(1);
-dataErrPlt.Name = 'Transmission Data Error for AWGN channel with BPSK Modulation';
-dataErrPlt.WindowState = 'maximized';
-
-% Plot data error distribution (Measured)
-histogram(dataErr, 2^(Np + 1), 'Normalization', 'probability', 'BinMethod', 'integers');
-xlabel('Magnitude of receivde bits');
-ylabel('Occurrence probability');
-title('Data Error Distribution');
-set(gca, 'Fontsize', 20, 'Linewidth', 2);
+%% Plot and Fit Laplace Distribution
+LaplaceFit(dataErr, Np);
 
 
 
