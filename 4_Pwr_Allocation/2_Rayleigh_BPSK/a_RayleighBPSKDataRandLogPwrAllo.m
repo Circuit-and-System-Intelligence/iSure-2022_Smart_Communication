@@ -28,13 +28,13 @@ Feq = Fs / log2(M);                         % Equivalent sampling rate for symbo
 % Define wireless communication environment parameters
 
 % Small-Scale fading
-Nw = 34;                                    % Number of scattered plane waves arriving at the receiver
+Nw = 58;                                    % Number of scattered plane waves arriving at the receiver
 fm = 50;                                    % Maximum doppler shift (Hz)
 t0 = 0;                                     % Initial time (s)
 phiN = 0;                                   % Initial phase of signal with maximum doppler shift (rad)
 
 % Signal-to-noise ratio
-Eb_N0 = 0;                                  % Average bit energy to single-sided noise spectrum power (dB)
+Eb_N0 = 5;                                  % Average bit energy to single-sided noise spectrum power (dB)
 Eb_N0_U = 10^(Eb_N0 / 10);
 % Transimitter gain (Take MSB for reference bit)
 idxNp = (Np : -1 : 1).';
@@ -208,8 +208,10 @@ fprintf('Bit number %d: Theoretical = %.3e, Measured = %.3e\n', ...
 
 
 %% Plot and Fit Laplace Distribution
-LaplaceFit(dataErr, Np);
 
+% LaplaceFit(dataErr, Np);
 
+f0 = prod(1 - measBER);
+LaplaceFitImproved(dataErr, Np, f0);
 
 

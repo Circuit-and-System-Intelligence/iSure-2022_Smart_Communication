@@ -17,7 +17,7 @@ mu = sum(X) / N;                                            % Estimate distribut
 
 sigma = sum(abs(X-mu)) / N;                                 % Estimate distribution's standard deviation
 xprim = mu + linspace(-2^Np, 2^Np, 1000);                   % Generate xprim vector
-fx = 1/(sqrt(2)*sigma) * exp(-abs(xprim-mu)/sigma);         % Calculate the Laplace PDF
+fx = 1 / (2*sigma) * exp(-abs(xprim-mu)/sigma);             % Calculate the Laplace PDF
 
 % Normalize the pdf
 pn = FreqCal(X, Np);                                         % Calculate the frequence of each error (Normalized)

@@ -1,23 +1,24 @@
-function LaplaceFit(X, Np)
+function LaplaceFitImproved(X, Np, f0)
 % 
-% Laplace distribution fit
+% Laplace distribution fit (Improved for data error distribution)
 % 
 % Author:  Zhiyu Shen
-% Date:    Aug 30, 2022
+% Date:    Sept 6, 2022
 % Project: Channel Modeling - iSure 2022
 %
 % Input Argument:
 %   @X:  Sequence to be fitted
 %   @Np: Pack size
+%   @f0: Value of PDF at zero point
 %
 
 % Estimate distribution parameter
 N = length(X);                                              % Length of sequence
 mu = sum(X) / N;                                            % Estimate distribution's mean
 
-sigma = sum(abs(X-mu)) / N;                                 % Estimate distribution's standard deviation
+sigma = 1 / (2 * f0);                                       % Estimate distribution's standard deviation
 xprim = mu + linspace(-2^Np, 2^Np, 1000);                   % Generate xprim vector
-fx = 1 / (2*sigma) * exp(-abs(xprim-mu)/sigma);             % Calculate the Laplace PDF
+fx = 1 / (2*sigma) * exp(-abs(xprim)/sigma);             % Calculate the Laplace PDF
 
 % Normalize the pdf
 pn = FreqCal(X, Np);                                         % Calculate the frequence of each error (Normalized)

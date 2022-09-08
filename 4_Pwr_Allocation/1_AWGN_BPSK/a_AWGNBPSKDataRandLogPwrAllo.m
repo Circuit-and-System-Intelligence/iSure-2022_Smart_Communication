@@ -18,7 +18,7 @@ close all
 % Define baseband parameters
 bitrate = 100000;                           % Bitrate (Hz)
 Gstd = 1;                                   % Standard transmission gain
-Np = 2;                                     % Number of bits in a package
+Np = 3;                                     % Number of bits in a package
 Fs = bitrate;                               % Sampling rate (Hz)
 M = 2;                                      % Modulation order
 Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
@@ -34,7 +34,6 @@ Eb_N0_U = 10^(Eb_N0 / 10);
 idxNp = (Np : -1 : 1).';
 % gainProp = 2.^(idxNp - Np);
 gainProp = exp(idxNp - Np);
-gainProp(1) = 2 * gainProp(1);
 % gainProp = [1; 1 / 2; 1 / 4; 1 / 8];
 % gainProp = [1; 1 / 2];
 Gt = gainProp * Gstd;                       % Gain of ith bit in a pack
@@ -221,6 +220,12 @@ fprintf('Bit number %d: Theoretical = %.3e, Measured = %.3e\n', ...
 % title('Amplitude distribution of the random signal')
 % legend('Distribution of the signal', 'PDF of the Laplace distribution')
 
-LaplaceFit(dataErr, Np);
 
+
+%% Plot and Fit Laplace Distribution
+
+% LaplaceFit(dataErr, Np);
+
+f0 = prod(1 - measBER);
+LaplaceFitImproved(dataErr, Np, f0);
 
