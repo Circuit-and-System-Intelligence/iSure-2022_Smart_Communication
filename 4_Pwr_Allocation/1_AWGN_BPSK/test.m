@@ -2,23 +2,12 @@ clear
 clc
 close all
 
-Np = 4;
-EbNo = 0;
+xn = [2, 3, 4, 5, 6, 7, 8];
+yn = [0.434, 1.146, 2.460, 4.993, 10.083, 20.116, 40.315];
 
-pn = TheorDataErrorDistri(Np, EbNo);
 
-%%% Plot
+plt = figure(1);
+plt.WindowState = 'maximized';
 
-% Data error distribution figure settings
-dataErrPlt = figure(1);
-dataErrPlt.Name = 'Theoretical Data Error for AWGN channel with BPSK Modulation';
-dataErrPlt.WindowState = 'maximized';
-
-% Plot data error distribution (Theoretical)
-xn = -2^Np + 1 : 1 : 2^Np - 1;
-stem(xn, pn, "LineWidth", 2, "Color", "#0072BD")
-xlabel('Data error value');
-ylabel('Occurrence probability');
-title('Data Error Distribution');
+plot(xn, yn, "LineWidth", 2, "Color", "#0072BD");
 set(gca, 'Fontsize', 20, 'Linewidth', 2);
-

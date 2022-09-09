@@ -28,20 +28,20 @@ Feq = Fs / log2(M);                         % Equivalent sampling rate for symbo
 % Define wireless communication environment parameters
 
 % Small-Scale fading
-Nw = 58;                                    % Number of scattered plane waves arriving at the receiver
+Nw = 98;                                    % Number of scattered plane waves arriving at the receiver
 fm = 50;                                    % Maximum doppler shift (Hz)
 t0 = 0;                                     % Initial time (s)
 phiN = 0;                                   % Initial phase of signal with maximum doppler shift (rad)
 
 % Signal-to-noise ratio
-Eb_N0 = 5;                                  % Average bit energy to single-sided noise spectrum power (dB)
-Eb_N0_U = 10^(Eb_N0 / 10);
+EbNo = -5;                                  % Average bit energy to single-sided noise spectrum power (dB)
+EbNoUnit = 10^(EbNo / 10);
 % Transimitter gain (Take MSB for reference bit)
 idxNp = (Np : -1 : 1).';
-gainProp = 2.^(idxNp - Np);
-% gainProp = exp(idxNp - Np);
-% gainProp = [1; 1; 1 / 10; 1 / 10];
-Gt = gainProp * Gstd;                       % Gain of ith bit in a pack
+% gRatio = 2.^(idxNp - Np);
+gRatio = exp(idxNp - Np);
+% gRatio = [1; 1; 1 / 10; 1 / 10];
+Gt = gRatio * Gstd;                         % Gain of ith bit in a pack
 
 % Data error-related parameters
 minErr = 0.03;                              % Minimal data error counts
@@ -93,7 +93,7 @@ txChanSig = txBbSig .* h0;
 % Calculate signal power
 Ps = Gstd^2;
 Eb = Ps / Fs;
-N0 = Eb / (10^(Eb_N0 / 10));
+N0 = Eb / (10^(EbNo / 10));
 
 % Generate gaussian white noise
 sigmaN = sqrt(N0 / 2 * Fs);
@@ -142,35 +142,61 @@ dataErr = dataRecv - dataSend;
 %% Calculate Some Theoretical Values
 
 % Calculate the actual theoretical BER for each bit
-trueEbN0 = Eb_N0_U * (Gt / Gstd).^2;
+trueEbN0 = EbNoUnit * (Gt / Gstd).^2;
 theorBER = 0.5 * (1 - sqrt(trueEbN0 ./ (1 + trueEbN0)));
 
-% Calculate ideal bit error distribution
-distMag = -4 * sigmaN : 0.01 : 4 * sigmaN;
-idealMagPdf = normpdf(distMag, 0, sigmaN);
+
+%% Calculate Measured and Theoretical Distribution and Their Laplace Fit
+
+% Range of data error
+Xn = -2^Np + 1 : 1 : 2^Np - 1;
+
+% Calculate measured data error distribution
+Mn = FreqCal(dataErr, Np);                                        % Calculate the frequence of each error (Normalized)
+
+% Calculate theoretical data error distribution
+Tn = TheorDataErrorDistri(Np, EbNo);
+
+% Laplace fit of measured data error distribution
+[Lnm, IdxLnm, muLap, bLap] = LaplaceFit(dataErr, Np);
 
 
-%% Calculate Data Error Distribution
+%% Plot
 
-% Calculate data error distribution
-pn = FreqCal(dataErr, Np);
+distriPlt = figure(1);
+distriPlt.WindowState = 'maximized';
 
-% Calculate distribution range
-errVal = 0;                         % Current error value
-pnIdx = errVal + 2^Np;              % The index of the current error value
-errProb = pn(pnIdx);                % Probability of current error value
-errProp = 0;                        % The ratio of probability of last error value and current one
+% Plot theoretical data erro distribution
+subplot(1, 2, 1);
+hold on
+% Plot theoretical distribution
+stem(Xn, Tn, "LineWidth", 2, "Color", "#0072BD");
+hold off
+% Set the plotting properties
+xlabel('Data error value');
+ylabel('Occurrence probability');
+title('Theoretical Data Error Distribution and Its Laplace Fit');
+xlim([-2^Np 2^Np]);
+ylim([0 max(Tn) * 2]);
+set(gca, 'Fontsize', 20, 'Linewidth', 2);
 
-while (errProb > minErr) && (errProp < maxErrProp)
-    errVal = errVal + 1;            % Update current error value with next one
-    pnIdx = errVal + 2^Np;          % Index of the error value
-    errProbPrev = errProb;          % Update probability of previous error value
-    errProb = pn(pnIdx);            % Update probability of current error value
-    errProp = errProbPrev / errProb;% The ratio of probability of last error value and current one
-end
+% Plot measured data erro distribution and its Laplace fit
+subplot(1, 2, 2);
+hold on
+% Plot measured distribution
+stem(Xn, Mn, "LineWidth", 2, "Color", "#0072BD")
+% Plot the Laplace PDF 
+plot(IdxLnm, Lnm, "LineWidth", 2, "Color", "#D95319")
+hold off
+% Set the plotting properties
+xlabel('Data error value');
+ylabel('Occurrence probability');
+title('Measured Data Error Distribution and Its Laplace Fit');
+legend('Measured distribution', 'Laplace fit');
+xlim([-2^Np 2^Np]);
+ylim([0 max(Tn) * 2]);
+set(gca, 'Fontsize', 20, 'Linewidth', 2);
 
-errLb = -errVal + 1;
-errUb = errVal - 1;
 
 %% Print Transmission Information
 
@@ -179,7 +205,7 @@ fprintf('Baseband Equivalent\n');
 fprintf('Bit Error Gaussian Distributed\n')
 
 fprintf('\n---------- Environment Information ----------\n');
-fprintf('Eb/N0 = %.2f dB, i.e. %.2f\n', Eb_N0, Eb_N0_U);
+fprintf('Eb/N0 = %.2f dB, i.e. %.2f\n', EbNo, EbNoUnit);
 fprintf('Signal power = %.2f w\n', Ps);
 fprintf('Complex noise power for bits = %.2f w\n', 2 * sigmaN^2);
 
@@ -206,12 +232,6 @@ fprintf('BER Comparison:\n');
 fprintf('Bit number %d: Theoretical = %.3e, Measured = %.3e\n', ...
         berPrt);
 
-
-%% Plot and Fit Laplace Distribution
-
-% LaplaceFit(dataErr, Np);
-
-f0 = prod(1 - measBER);
-LaplaceFitImproved(dataErr, Np, f0);
-
-
+fprintf('\n----------- Laplace Fit Info -----------\n')
+fprintf('mu = %.3f\n', muLap);
+fprintf('b = %.3f\n', bLap);

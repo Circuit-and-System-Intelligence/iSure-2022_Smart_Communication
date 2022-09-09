@@ -1,45 +1,28 @@
-function LaplaceFit(X, Np)
+function [Ln, Idx, mu, b] = LaplaceFit(X, Np)
 % 
-% Laplace distribution fit
+% Laplace distribution fit (Improved for data error distribution)
 % 
 % Author:  Zhiyu Shen
-% Date:    Aug 30, 2022
+% Date:    Sept 6, 2022
 % Project: Channel Modeling - iSure 2022
 %
 % Input Argument:
-%   @X:  Sequence to be fitted
-%   @Np: Pack size
+%   @X:    Sequence to be fitted
+%   @Np:   Pack size
+%
+% Output Argument:
+%   @Ln:  Laplace distribution fit sequence
+%   @Idx: Index of distribution sequence
+%   @mu:  Estimated mean of Laplace distribution
+%   @b:   Estimated standard variance of Laplace distribution
 %
 
 % Estimate distribution parameter
 N = length(X);                                              % Length of sequence
 mu = sum(X) / N;                                            % Estimate distribution's mean
 
-sigma = sum(abs(X-mu)) / N;                                 % Estimate distribution's standard deviation
-xprim = mu + linspace(-2^Np, 2^Np, 1000);                   % Generate xprim vector
-fx = 1 / (2*sigma) * exp(-abs(xprim-mu)/sigma);             % Calculate the Laplace PDF
-
-% Normalize the pdf
-pn = FreqCal(X, Np);                                         % Calculate the frequence of each error (Normalized)
-xn = -2^Np + 1 : 1 : 2^Np - 1;                              % Range of data error
-
-% Figure settings
-figure(1);
-xlabel('Magnitude of receivde bits');
-ylabel('Occurrence probability');
-title('Data Error Distribution and Its Laplace Fit');
-
-% Plot actual distribution
-stem(xn, pn, "LineWidth", 2, "Color", "#0072BD")
-hold on
-
-% Plot the Laplace PDF 
-plot(xprim, fx, "LineWidth", 2, "Color", "#D95319")
-hold off
-
-% Set the plotting properties
-xlim([-2^Np 2^Np])
-ylim([0 max(pn) * 2])
-set(gca, 'Fontsize', 20, 'Linewidth', 2);
+b = sum(abs(X-mu)) / N;                                     % Estimate distribution's standard deviation
+Idx = mu + linspace(-2^Np, 2^Np, 1000);                     % Generate xprim vector
+Ln = 1 / (2*b) * exp(-abs(Idx)/b);                          % Calculate the Laplace PDF
 
 end
