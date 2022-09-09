@@ -18,7 +18,7 @@ close all
 % Define baseband parameters
 bitrate = 100000;                           % Bitrate (Hz)
 Gstd = 1;                                   % Standard transmission gain
-Np = 3;                                     % Number of bits in a package
+Np = 4;                                     % Number of bits in a package
 Fs = bitrate;                               % Sampling rate (Hz)
 M = 2;                                      % Modulation order
 Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
@@ -28,8 +28,8 @@ Feq = Fs / log2(M);                         % Equivalent sampling rate for symbo
 % Define wireless communication environment parameters
 
 % Signal-to-noise ratio
-Eb_N0 = 0;                                  % Average bit energy to single-sided noise spectrum power (dB)
-Eb_N0_U = 10^(Eb_N0 / 10);
+EbNo = 0;                                   % Average bit energy to single-sided noise spectrum power (dB)
+EbNoUnit = 10^(EbNo / 10);
 % Transimitter gain (Take MSB for reference bit)
 idxNp = (Np : -1 : 1).';
 % gainProp = 2.^(idxNp - Np);
@@ -81,7 +81,7 @@ txPwr = abs(txBbSig.^2);
 % Calculate signal power
 Ps = Gstd^2;
 Eb = Ps / Fs;
-N0 = Eb / (10^(Eb_N0/10));
+N0 = Eb / (10^(EbNo/10));
 
 % Generate gaussian white noise
 sigmaN = sqrt(N0*Fs/2);
@@ -127,7 +127,7 @@ dataErr = dataRecv - dataSend;
 %% Calculate Some Theoretical Values
 
 % Calculate the actual theoretical BER for each bit
-trueEbN0 = Eb_N0_U * (Gt / Gstd).^2;
+trueEbN0 = EbNoUnit * (Gt / Gstd).^2;
 theorBER = qfunc(sqrt(2 * trueEbN0));
 
 % Calculate ideal bit error distribution
@@ -164,7 +164,7 @@ fprintf('Baseband Equivalent\n');
 fprintf('Bit Error Gaussian Distributed\n')
 
 fprintf('\n---------- Environment Information ----------\n');
-fprintf('Eb/N0 = %.2f dB, i.e. %.2f\n', Eb_N0, Eb_N0_U);
+fprintf('Eb/N0 = %.2f dB, i.e. %.2f\n', EbNo, EbNoUnit);
 fprintf('Signal power = %.2f w\n', Ps);
 fprintf('Complex noise power for bits = %.2f w\n', 2 * sigmaN^2);
 
@@ -192,40 +192,57 @@ fprintf('Bit number %d: Theoretical = %.3e, Measured = %.3e\n', ...
         berPrt);
 
 
-% %% Plot
-% 
-% % Data error distribution figure settings
-% dataErrPlt = figure(1);
-% dataErrPlt.Name = 'Transmission Data Error for AWGN channel with BPSK Modulation';
-% dataErrPlt.WindowState = 'maximized';
-% 
-% % Plot data error distribution (Measured)
-% histogram(dataErr, 2^(Np + 1), 'Normalization', 'probability', 'BinMethod', 'integers');
-% xlabel('Magnitude of receivde bits');
-% ylabel('Occurrence probability');
-% title('Data Error Distribution');
-% set(gca, 'Fontsize', 20, 'Linewidth', 2);
-% 
-% % Laplace fit in settings
-% lapFitPlt = figure(2);
-% lapFitPlt.Name = 'Laplace Fit';
-% lapFitPlt.WindowState = 'maximized';
-% 
-% % Plot data error distribution (Measured)
-% histfitlaplace(dataErr)
-% grid on
-% set(gca, 'FontName', 'Times New Roman', 'FontSize', 14)
-% xlabel('Amplitude')
-% ylabel('Number of samples')
-% title('Amplitude distribution of the random signal')
-% legend('Distribution of the signal', 'PDF of the Laplace distribution')
+%% Calculate Measured and Theoretical Distribution and Their Laplace Fit
+
+% Range of data error
+Xn = -2^Np + 1 : 1 : 2^Np - 1;
+
+% Calculate measured data error distribution
+Mn = FreqCal(dataErr, Np);                                        % Calculate the frequence of each error (Normalized)
+
+% Calculate theoretical data error distribution
+Tn = TheorDataErrorDistri(Np, EbNo);
+
+% Laplace fit of measured data error distribution
+[Lnm, IdxLnm] = LaplaceFit(dataErr, Np);
 
 
+%% Plot
 
-%% Plot and Fit Laplace Distribution
+distriPlt = figure(1);
+distriPlt.WindowState = 'maximized';
 
-% LaplaceFit(dataErr, Np);
+% Plot theoretical data erro distribution
+subplot(1, 2, 1);
+hold on
+% Plot theoretical distribution
+stem(Xn, Tn, "LineWidth", 2, "Color", "#0072BD")
+% % Plot the Laplace PDF 
+% plot(xprim, fx, "LineWidth", 2, "Color", "#D95319")
+hold off
+% Set the plotting properties
+xlabel('Data error value');
+ylabel('Occurrence probability');
+title('Theoretical Data Error Distribution and Its Laplace Fit');
+% legend('Theoretical distribution', 'Laplace fit');
+xlim([-2^Np 2^Np])
+ylim([0 max(Tn) * 2])
+set(gca, 'Fontsize', 20, 'Linewidth', 2);
 
-f0 = prod(1 - measBER);
-LaplaceFitImproved(dataErr, Np, f0);
+% Plot measured data erro distribution and its Laplace fit
+subplot(1, 2, 2);
+hold on
+% Plot measured distribution
+stem(Xn, Mn, "LineWidth", 2, "Color", "#0072BD")
+% Plot the Laplace PDF 
+plot(IdxLnm, Lnm, "LineWidth", 2, "Color", "#D95319")
+hold off
+% Set the plotting properties
+xlabel('Data error value');
+ylabel('Occurrence probability');
+title('Measured Data Error Distribution and Its Laplace Fit');
+legend('Measured distribution', 'Laplace fit');
+xlim([-2^Np 2^Np])
+ylim([0 max(pn) * 2])
+set(gca, 'Fontsize', 20, 'Linewidth', 2);
 
