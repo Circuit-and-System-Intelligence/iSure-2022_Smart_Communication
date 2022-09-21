@@ -39,7 +39,7 @@ fn = zeros(Nerr, 1);
 fn(1) = pe(Np)/2;
 fn(2) = 1-pe(Np);
 fn(3) = fn(1);
-zeroIdx = 2^(k+1);                          % Index of zero dat error point
+zeroIdx = 2^(k+1);                              % Index of zero dat error point
     
 % Calculate data error ditribution according to recurrence formula
 % fn represents PDF of data error when pack size is k
