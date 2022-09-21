@@ -18,7 +18,7 @@ close all
 % Define baseband parameters
 bitrate = 100000;                           % Bitrate (Hz)
 Gstd = 1;                                   % Standard transmission gain
-Np = 4;                                     % Number of bits in a package
+Np = 8;                                     % Number of bits in a package
 Fs = bitrate;                               % Sampling rate (Hz)
 M = 2;                                      % Modulation order
 Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
