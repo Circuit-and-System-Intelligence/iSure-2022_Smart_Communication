@@ -1,5 +1,5 @@
 # README
 
-Codes for channel modeling
+Codes for Smart Communication
 
 Contributor: Zhiyu Shen
