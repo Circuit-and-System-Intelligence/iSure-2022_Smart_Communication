@@ -29,7 +29,7 @@ Feq = Fs / log2(M);                         % Equivalent sampling rate for symbo
 % Signal power
 pwrNoise = 30;                              % Noise power (dBm)
 pwrNoiseUnit = 10.^(pwrNoise./10-3);        % Noise power (W)
-pwrMsb = 30;                                % MSB transmit power (dBm)
+pwrMsb = 40;                                % MSB transmit power (dBm)
 pwrMsbUnit = 10.^(pwrMsb./10-3);            % MSB transmit power (W)
 Gstd = sqrt(pwrMsbUnit);
 
@@ -81,8 +81,8 @@ textSysParam = ['$Np=', num2str(Np), ',\quad ', 'P_N=', ...
     num2str(pwrNoise), '\ dBm\ (', num2str(pwrNoiseUnit), 'W),\quad ', ...
     'P_{TX_{MSB}}=', num2str(pwrMsb), '\ dBm\ (', num2str(pwrMsbUnit), ...
     'W)$'];
-textFormula = ['$f(x)=\frac{1}{2b}\mathrm{e}^{-\frac{\vert x \vert}{b}},\quad ', ...
-    'b=', num2str(bLap), '$'];
+textFormula = '$f(x)=\frac{1}{2b}\mathrm{e}^{-\frac{\vert x \vert}{b}}$';
+textStr = ['$b=', num2str(bLap), '$'];
 
 % Plot theoretical data erro distribution
 hold on
@@ -98,7 +98,9 @@ ylabel('PDF');
 xlim([-2^Np 2^Np]);
 ylim([0 max(Tn)*2]);
 legend('Theoretical PDF', 'Laplace fit');
-text(0, max(Tn)*1.5, textFormula, 'FontSize', 24, 'HorizontalAlignment', ...
+text(0, max(Tn)*1.5, textStr, 'FontSize', 24, 'HorizontalAlignment', ...
+    'center', 'Interpreter', 'latex');
+text(0, max(Tn)*1.5, [textFormula,textStr], 'FontSize', 24, 'HorizontalAlignment', ...
     'center', 'Interpreter', 'latex');
 set(gca, 'Fontsize', 20);
 

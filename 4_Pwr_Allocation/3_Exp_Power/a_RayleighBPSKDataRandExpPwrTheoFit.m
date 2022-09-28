@@ -1,10 +1,10 @@
 % Description:  Laplace Fit of Theoretical Data Error PDF
 % Projet:       Channel Modeling - iSure 2022
-% Date:         Sept 22, 2022
+% Date:         Sept 23, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
-%   AWGN channel, BPSK modulation
+%   Rayleigh fading channel, BPSK modulation
 %   Transmit random data uniformly distributted
 %   Allocate transmission power in a exponential way
 
@@ -48,7 +48,7 @@ pwrSig = Gt.^2;                             % Transmit power of ith bit in a pac
 
 % Calculate the actual theoretical BER for each bit
 trueEbnoUnit = ebnoUnit * gRatio.^2;
-theorBER = qfunc(sqrt(2 * trueEbnoUnit));
+theorBER = 0.5 * (1-sqrt(trueEbnoUnit./(1+trueEbnoUnit)));
 
 
 %% Calculate Measured and Theoretical Distribution and Their Laplace Fit
@@ -57,9 +57,9 @@ theorBER = qfunc(sqrt(2 * trueEbnoUnit));
 Xn = -2^Np+1 : 1 : 2^Np-1;
 
 % Calculate theoretical data error distribution
-Tn = TheorDataErrorDistri(Np, trueEbnoUnit, 0);
+Tn = TheorDataErrorDistri(Np, trueEbnoUnit, 1);
 
-% % Fit exp curve with second half of data error PDF (z > 0)
+% % Second half of data error PDF (z > 0)
 % xnFit = (0 : 2^Np-1).';
 % tnHalf = Tn(2^Np : end);
 % funFit = fit(xnFit, tnHalf, 'exp1');
@@ -72,40 +72,37 @@ bLap = 1 / (2*Tn(2^Np));
 tnFit = 1/(2*bLap) * exp(-abs(Xn)/bLap);
 
 
+
 %% Plot
 
 distriPlt = figure(1);
 distriPlt.WindowState = 'maximized';
 
-textSysParam = ['$Np=', num2str(Np), ',\quad ', 'P_N=', ...
-    num2str(pwrNoise), '\ dBm\ (', num2str(pwrNoiseUnit), 'W),\quad ', ...
-    'P_{TX_{MSB}}=', num2str(pwrMsb), '\ dBm\ (', num2str(pwrMsbUnit), ...
-    'W)$'];
-textFormula = ['$f(x)=\frac{1}{2b}\mathrm{e}^{-\frac{\vert x \vert}{b}},\quad ', ...
-    'b=', num2str(bLap), '$'];
+titleSysParam = ['\it\fontname{Times New Roman}', 'Np = ', num2str(Np), ...
+    ', ', 'Noise power = ', num2str(pwrNoise), ' dBm (', ...
+    num2str(pwrNoiseUnit), ' W), ', 'Transmit power of MSB = ', ...
+    num2str(pwrMsb), ' dBm (', num2str(pwrMsbUnit), ' W)', '\fontname{Times New Roman}\rm'];
+textStr = ['\it\fontname{Times New Roman}b = ', num2str(bLap), '\fontname{Times New Roman}\rm'];
 
 % Plot theoretical data erro distribution
 hold on
 % Plot theoretical distribution
-stem(Xn, Tn, 'LineWidth', 1.5, 'Color', '#0072BD');
-plot(Xn, tnFit, 'LineWidth', 4, 'Color', '#D95319');
+stem(Xn, Tn, "LineWidth", 1.5, "Color", "#0072BD");
+plot(Xn, tnFit, "LineWidth", 4, "Color", "#D95319");
 hold off
 % Set the plotting properties
-title('\bf Theoretical Data Error PDF (AWGN Channel, BPSK)', textSysParam, ...
-    'Interpreter', 'latex', 'FontName', 'Times New Roman', 'FontSize', 12);
+title('Theoretical Data Error PDF (Rayleigh Fading Channel, BPSK)', titleSysParam);
 xlabel('Data error value');
-ylabel('PDF');
+ylabel('Occurrence probability');
 xlim([-2^Np 2^Np]);
 ylim([0 max(Tn)*2]);
 legend('Theoretical PDF', 'Laplace fit');
-text(0, max(Tn)*1.5, textFormula, 'FontSize', 24, 'HorizontalAlignment', ...
-    'center', 'Interpreter', 'latex');
+text(0, max(Tn)*1.5, textStr, 'FontSize', 24, 'HorizontalAlignment', 'center');
 set(gca, 'Fontsize', 20);
-
 
 %% Print Transmission Information
 
-fprintf('AWGN Channel, BPSK Mdulation\n');
+fprintf('Rayleigh Fading Channel, BPSK Mdulation\n');
 fprintf('Baseband Equivalent\n');
 fprintf('Bit Error Gaussian Distributed\n')
 
@@ -125,9 +122,9 @@ pwrPrt = [idxNp, pwrSig, pwrLog].';
 fprintf('Bit number %d: Transmission power = %.5e W = %.2f dBm\n', pwrPrt);
 
 fprintf('\n----------- True Eb/N0 -----------\n');
-ebnoLog = 10 * log10(trueEbnoUnit);
-ebnoPrt = [idxNp, trueEbnoUnit, ebnoLog].';
-fprintf('Bit number %d: Eb/N0 = %.5e = %.2f dB\n', ebnoPrt);
+ebn0Log = 10 * log10(trueEbnoUnit);
+ebn0Prt = [idxNp, trueEbnoUnit, ebn0Log].';
+fprintf('Bit number %d: Eb/N0 = %.5e = %.2f dB\n', ebn0Prt);
 
 fprintf('\n----------- Transmission Error -----------\n');
 berPrt = [idxNp, theorBER].';
