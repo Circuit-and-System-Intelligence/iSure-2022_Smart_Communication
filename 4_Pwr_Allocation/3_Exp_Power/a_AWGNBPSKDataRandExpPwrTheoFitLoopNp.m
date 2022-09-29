@@ -1,4 +1,4 @@
-% Description:  Laplace Fit of Theoretical Data Error PDF (Changing Np)
+% Description:  Laplace fit of theoretical data error PDF (Changing Np)
 % Projet:       Channel Modeling - iSure 2022
 % Date:         Sept 26, 2022
 % Author:       Zhiyu Shen
