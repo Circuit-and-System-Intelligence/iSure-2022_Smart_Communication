@@ -141,8 +141,8 @@ Tn = TheorDataErrorDistri(Np, trueEbnoUnit, 0);
 bLapTheo = 1 / (2*Tn(2^Np));
 tnFit = 1/(2*bLapTheo) * exp(-abs(Xn)/bLapTheo);
 
-% Laplace fit of measured data error distribution
-[mnFit, IdxMnFit, muLapMeas, bLapMeas] = LaplaceFit(dataErr, Np);
+% % Laplace fit of measured data error distribution
+% [mnFit, IdxMnFit, muLapMeas, bLapMeas] = LaplaceFit(dataErr, Np);
 
 
 
@@ -181,8 +181,8 @@ fprintf('Bit number %d: Theoretical = %.3e, Measured = %.3e\n', ...
 fprintf('\n----------- Laplace Fit Info -----------\n')
 fprintf('Theoretical mu = %.3f\n', 0);
 fprintf('Theoretical b = %.3f\n', bLapTheo);
-fprintf('Measured mu = %.3f\n', muLapMeas);
-fprintf('Measured b = %.3f\n', bLapMeas);
+% fprintf('Measured mu = %.3f\n', muLapMeas);
+% fprintf('Measured b = %.3f\n', bLapMeas);
 
 
 %% Plot
@@ -207,7 +207,7 @@ dataErrPlt.WindowState = 'maximized';
 % Plot data error distribution and its Laplace fit (Theoretical)
 hold on
 stem(Xn, Mn, 'LineWidth', 2.5, 'Color', '#0072BD');
-plot(IdxMnFit, mnFit, 'LineWidth', 2, 'Color', '#D95319')
+plot(Xn, tnFit, 'LineWidth', 2, 'Color', '#D95319')
 hold off
 xlabel('\bf Data Error Value', 'Interpreter', 'latex', 'FontName', ...
     'Times New Roman');
