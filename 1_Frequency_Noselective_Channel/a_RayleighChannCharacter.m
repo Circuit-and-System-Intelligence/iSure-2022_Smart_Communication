@@ -13,12 +13,12 @@ close all
 
 %% Parameter Definition
 
-Nb = 64;                                % Number of bits
-bitRate = 1000;                         % Bitrate (Hz)
-Fs = 1e6;                               % Sample rate (Hz)
+Nb = 1000000;                           % Number of bits
+bitRate = 100000;                       % Bitrate (Hz)
+Fs = 1e5;                               % Sample rate (Hz)
 Ns = Nb / bitRate * Fs;                 % Number of signal samples
-Nw = 34;                                % Number of scattered plane waves arriving at the receiver
-fm = 926;                               % Maximum doppler shift (Hz)
+Nw = 98;                                % Number of scattered plane waves arriving at the receiver
+fm = 50;                                % Maximum doppler shift (Hz)
 t0 = 0;                                 % Initial time (s)
 phiN = 0;                               % Initial phase of signal with maximum doppler shift (rad)
 
@@ -61,30 +61,32 @@ dist.Name = 'Distribution of Jakes Model Channel Response';
 subplot(1, 2, 1);
 hold on
 histogram(abs(h), 25, 'Normalization', 'pdf');
-title('Fading Channel Coefficient Amplitude Distribution', pltCom, ...
-    'FontSize', 16, 'Interpreter', 'latex');
+title('\bf Fading Channel Coefficient Amplitude Distribution', ...
+    'FontSize', 20, 'Interpreter', 'latex');
 % Ideal distribution
 distMag = 0: 0.01 : 3;
 idealMagPdf = raylpdf(distMag, sqrt(1/2));
-plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 1.5);
-xlabel('Magnitude');
-ylabel('PDF');
+plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 2.5);
+xlabel('\bf Amplitude (V)', 'Interpreter', 'latex');
+ylabel('\bf PDF', 'Interpreter', 'latex');
+set(gca, 'FontName', 'Times New Roman', 'FontSize', 20);
 legend('Simulation', 'Ideal');
 hold off
 % Angle
 subplot(1, 2, 2);
 hold on
 histogram(angle(h), 25, 'Normalization', 'pdf');
-title('Fading Channel Coefficient Angle Distribution', pltCom, ...
-    'FontSize', 16, 'Interpreter', 'latex');
+title('\bf Fading Channel Coefficient Angle Distribution', ...
+    'FontSize', 20, 'Interpreter', 'latex');
 % Ideal distribution
 distAng = -pi : 0.01 : pi;
 idealAngPdf = 1 / (2*pi) * ones(length(distAng));
-plot(distAng, idealAngPdf, 'Color', '#D95319', 'LineWidth', 1.5);
-xlabel('Phase \phi/rad');
-ylabel('PDF');
+plot(distAng, idealAngPdf, 'Color', '#D95319', 'LineWidth', 2.5);
+xlabel('\bf Phase (rad)', 'Interpreter', 'latex');
+ylabel('\bf PDF', 'Interpreter', 'latex');
 axis([-pi pi 0 inf]);
 legend('Simulation', 'Ideal');
+set(gca, 'FontName', 'Times New Roman', 'FontSize', 20);
 hold off
 
 % Autocorrelation function

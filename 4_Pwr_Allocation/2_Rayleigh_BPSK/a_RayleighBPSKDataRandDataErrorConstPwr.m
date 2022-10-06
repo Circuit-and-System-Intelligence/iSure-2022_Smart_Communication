@@ -28,7 +28,7 @@ Feq = Fs / log2(M);                         % Equivalent sampling rate for symbo
 % Define wireless communication environment parameters
 
 % Small-Scale fading
-Nw = 34;                                    % Number of scattered plane waves arriving at the receiver
+Nw = 98;                                    % Number of scattered plane waves arriving at the receiver
 fm = 50;                                    % Maximum doppler shift (Hz)
 t0 = 0;                                     % Initial time (s)
 phiN = 0;                                   % Initial phase of signal with maximum doppler shift (rad)
@@ -54,7 +54,7 @@ pwrSigUnit = txGain.^2;                     % Transmit power of ith bit in a pac
 %% Signal source
 
 % Generate sending data (Decimal)
-numData = 100000;                               % Number of sending datas (Decimalism)
+numData = 1000000;                              % Number of sending datas (Decimalism)
 dataSend = randi([0, 2^Np-1], 1, numData);      % Sending data (Decimal)
 
 % Convert decimal numbers into binary sequence (1st: MSb -> last: LSB)
@@ -209,7 +209,7 @@ dataErrPlt = figure(1);
 dataErrPlt.Name = 'Theoretical Data Error Distribution (Rayleigh Fading Channel, BPSK)';
 dataErrPlt.WindowState = 'maximized';
 % Plot data error distribution (Theoretical)
-stem(Xn, Mn, 'LineWidth', 2.5, 'Color', '#0072BD');
+stem(Xn, Tn, 'LineWidth', 2.5, 'Color', '#0072BD');
 xlabel('\bf Data Error Value', 'Interpreter', 'latex', 'FontName', ...
     'Times New Roman');
 ylabel('\bf PDF', 'Interpreter', 'latex', 'FontName', 'Times New Roman');
@@ -220,7 +220,7 @@ dataErrPlt = figure(2);
 dataErrPlt.Name = 'Measured Data Error Distribution (Raylegh Fading Channel, BPSK)';
 dataErrPlt.WindowState = 'maximized';
 % Plot data error distribution (Measured)
-stem(Xn, Tn, 'LineWidth', 2.5, 'Color', '#0072BD');
+stem(Xn, Mn, 'LineWidth', 2.5, 'Color', '#0072BD');
 xlabel('\bf Data Error Value', 'Interpreter', 'latex', 'FontName', ...
     'Times New Roman');
 ylabel('\bf PDF', 'Interpreter', 'latex', 'FontName', 'Times New Roman');

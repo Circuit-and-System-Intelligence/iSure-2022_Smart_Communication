@@ -82,7 +82,7 @@ for i = 1 : length(SNR)
     end
     bitErrRate(i) = bitErrNum / Nb;
     unitSNR = 10^(SNR(i) / 10);
-    theorBER(i) = 0.5 * (1 - sqrt(unitSNR / (2 + unitSNR)));
+    theorBER(i) = 0.5 * (1 - sqrt(unitSNR/(2+unitSNR)));
 
 end
 
