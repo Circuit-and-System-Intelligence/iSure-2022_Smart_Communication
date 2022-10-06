@@ -22,7 +22,8 @@ N = length(X);                                              % Length of sequence
 mu = sum(X) / N;                                            % Estimate distribution's mean
 
 b = sum(abs(X-mu)) / N;                                     % Estimate distribution's standard deviation
-Idx = mu + linspace(-2^Np, 2^Np, 1000);                     % Generate xprim vector
+% Idx = mu + linspace(-2^Np+1, 2^Np-1, 1000);                 % Generate xprim vector
+Idx = -2^Np+1 : 1 : 2^Np-1;
 Ln = 1 / (2*b) * exp(-abs(Idx)/b);                          % Calculate the Laplace PDF
 
 end

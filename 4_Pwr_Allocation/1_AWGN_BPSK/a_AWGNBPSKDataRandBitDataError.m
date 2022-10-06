@@ -1,12 +1,13 @@
 % Description:  Test Program for Transmission Error Distribution
 % Projet:       Channel Modeling - iSure 2022
-% Date:         Aug 22, 2022
+% Date:         Aug 17, 2022
 % Author:       Zhiyu Shen
 
 % Additional Description:
 %   AWGN channel, BPSK modulation
 %   Transmit random data uniformly distributted
 %   Allocate transmission power in a logrithmatic way
+
 
 clc
 clear
@@ -18,7 +19,7 @@ close all
 % Define baseband parameters
 bitrate = 100000;                           % Bitrate (Hz)
 Gstd = 1;                                   % Standard transmission gain
-Np = 8;                                     % Number of bits in a package
+Np = 4;                                     % Number of bits in a package
 Fs = bitrate;                               % Sampling rate (Hz)
 M = 2;                                      % Modulation order
 Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
@@ -28,19 +29,16 @@ Feq = Fs / log2(M);                         % Equivalent sampling rate for symbo
 % Define wireless communication environment parameters
 
 % Signal-to-noise ratio
-EbNo = 0;                                   % Average bit energy to single-sided noise spectrum power (dB)
-EbNoUnit = 10^(EbNo / 10);
+Eb_N0 = 0;                                 % Average bit energy to single-sided noise spectrum power (dB)
+Eb_N0_U = 10^(Eb_N0 / 10);
 % Transimitter gain (Take MSB for reference bit)
-idxNp = (Np : -1 : 1).';
-% gRatio = 2.^(idxNp - Np);
-gRatio = exp(idxNp - Np);
-% gRatio = [1; 1 / 2; 1 / 4; 1 / 8];
-% gRatio = [1; 1 / 2];
-Gt = gRatio * Gstd;                         % Gain of ith bit in a pack
+idxNp = (1 : Np).';
+% gainProp = 2.^(ones(Np, 1) - idxNp);
+% gainProp = [1; 1; 1; 0.5];
+% gainProp = [1; 1; 1; 1; 1; 1; 0.125; 0.125];
+gainProp = ones(Np, 1);
+Gt = gainProp * Gstd;                     % Gain of ith bit in a pack
 
-% Data error-related parameters
-minErr = 0.03;                              % Minimal data error counts
-maxErrProp = 1.5;                           % Propotion between the probability of two adjacent data errors
 
 %% Signal source
 
@@ -56,7 +54,7 @@ for i = 1 : Np
     txVec(i, :) = fix(txSeqRes / 2^(Np - i));
     txSeqRes = txSeqRes - txVec(i, :) * 2^(Np - i);
 end
-txSeq = reshape(txVec, 1, Nb);              % Binary sending sequence (0 and 1 seq)
+txSeq = reshape(txVec, 1, Nb);          % Binary sending sequence (0 and 1 seq)
 
 
 %% Baseband Modulation
@@ -79,13 +77,13 @@ txPwr = abs(txBbSig.^2);
 %% Add Noise
 
 % Calculate signal power
-Ps = Gstd^2;
+Ps = sum(txModSig.^2) / baseLen;
 Eb = Ps / Fs;
-N0 = Eb / (10^(EbNo/10));
+N0 = Eb / (10^(Eb_N0 / 10));
 
 % Generate gaussian white noise
-sigmaN = sqrt(N0*Fs/2);
-chanNoise = sigmaN*randn(1, baseLen) + 1i*sigmaN*randn(1, baseLen);
+sigmaN = sqrt(N0 / 2 * Fs);
+chanNoise = sigmaN * randn(1, baseLen) + 1i * sigmaN * randn(1, baseLen);
 
 % Signal goes through channel and add noise
 rxBbSig = real(txBbSig + chanNoise);
@@ -127,60 +125,12 @@ dataErr = dataRecv - dataSend;
 %% Calculate Some Theoretical Values
 
 % Calculate the actual theoretical BER for each bit
-trueEbN0 = EbNoUnit * (Gt / Gstd).^2;
+trueEbN0 = Eb_N0_U * (Gt / Gt(1)).^2;
 theorBER = qfunc(sqrt(2 * trueEbN0));
 
-
-%% Calculate Measured and Theoretical Distribution and Their Laplace Fit
-
-% Range of data error
-Xn = -2^Np + 1 : 1 : 2^Np - 1;
-
-% Calculate measured data error distribution
-Mn = FreqCal(dataErr, Np);                                        % Calculate the frequence of each error (Normalized)
-
-% Calculate theoretical data error distribution
-Tn = TheorDataErrorDistri(Np, EbNo);
-
-% Laplace fit of measured data error distribution
-[Lnm, IdxLnm, muLap, bLap] = LaplaceFit(dataErr, Np);
-
-
-%% Plot
-
-distriPlt = figure(1);
-distriPlt.WindowState = 'maximized';
-
-% Plot theoretical data erro distribution
-subplot(1, 2, 1);
-hold on
-% Plot theoretical distribution
-stem(Xn, Tn, "LineWidth", 2, "Color", "#0072BD");
-hold off
-% Set the plotting properties
-xlabel('Data error value');
-ylabel('Occurrence probability');
-title('Theoretical Data Error Distribution and Its Laplace Fit');
-xlim([-2^Np 2^Np]);
-ylim([0 max(Tn) * 2]);
-set(gca, 'Fontsize', 20, 'Linewidth', 2);
-
-% Plot measured data erro distribution and its Laplace fit
-subplot(1, 2, 2);
-hold on
-% Plot measured distribution
-stem(Xn, Mn, "LineWidth", 2, "Color", "#0072BD")
-% Plot the Laplace PDF 
-plot(IdxLnm, Lnm, "LineWidth", 2, "Color", "#D95319")
-hold off
-% Set the plotting properties
-xlabel('Data error value');
-ylabel('Occurrence probability');
-title('Measured Data Error Distribution and Its Laplace Fit');
-legend('Measured distribution', 'Laplace fit');
-xlim([-2^Np 2^Np]);
-ylim([0 max(Tn) * 2]);
-set(gca, 'Fontsize', 20, 'Linewidth', 2);
+% Calculate ideal bit error distribution
+distMag = -4 * sigmaN : 0.01 : 4 * sigmaN;
+idealMagPdf = normpdf(distMag, 0, sigmaN);
 
 
 %% Print Transmission Information
@@ -190,7 +140,7 @@ fprintf('Baseband Equivalent\n');
 fprintf('Bit Error Gaussian Distributed\n')
 
 fprintf('\n---------- Environment Information ----------\n');
-fprintf('Eb/N0 = %.2f dB, i.e. %.2f\n', EbNo, EbNoUnit);
+fprintf('Eb/N0 = %.2f dB, i.e. %.2f\n', Eb_N0, Eb_N0_U);
 fprintf('Signal power = %.2f w\n', Ps);
 fprintf('Complex noise power for bits = %.2f w\n', 2 * sigmaN^2);
 
@@ -204,12 +154,12 @@ fprintf('\n----------- Power Allocation -----------\n');
 pwrWatt = Gt.^2;
 pwrLog = 10 * log10(pwrWatt * 1000);
 pwrPrt = [idxNp, pwrWatt, pwrLog].';
-fprintf('Bit number %d: Transmission power = %.5e W = %.2f dBm\n', pwrPrt);
+fprintf('Bit number %d: Transmission power = %.5f W = %.2f dBm\n', pwrPrt);
 
 fprintf('\n----------- True Eb/N0 -----------\n');
 ebn0Log = 10 * log10(trueEbN0);
-ebn0Prt = [idxNp, trueEbN0, ebn0Log].';
-fprintf('Bit number %d: Eb/N0 = %.5e = %.2f dB\n', ebn0Prt);
+ebn0Prt = [idxNp, ebn0Log].';
+fprintf('Bit number %d: Eb/N0 = %.2f dB\n', ebn0Prt);
 
 fprintf('\n----------- Transmission Error -----------\n');
 berPrt = [idxNp, theorBER, measBER].';
@@ -217,13 +167,66 @@ fprintf('BER Comparison:\n');
 fprintf('Bit number %d: Theoretical = %.3e, Measured = %.3e\n', ...
         berPrt);
 
-fprintf('\n----------- Laplace Fit Info -----------\n')
-fprintf('mu = %.3f\n', muLap);
-fprintf('b = %.3f\n', bLap);
+
+%% Plot
+
+% Bit error distribution figure settings
+bitErrPlt = figure(1);
+bitErrPlt.Name = 'Transmission Bit Error for AWGN channel with BPSK Modulation';
+bitErrPlt.WindowState = 'maximized';
+% Plot bit error in time domain
+subplot(1, 2, 1);
+plot(bitErr(1 : 100 * Np), "LineWidth", 2, "Color", "#0072BD");
+title('Bit Error in Time Domain');
+xlabel('Sequence index');
+ylabel('Error (V)');
+set(gca, 'Fontsize', 20, 'Linewidth', 2);
+% Plot bit error distribution (Theoretical and measured)
+subplot(1, 2, 2)
+hold on
+histogram(bitErr, 2^(Np + 1), 'Normalization', 'pdf');
+plot(distMag, idealMagPdf, 'Color', '#D95319', 'LineWidth', 2);
+xlabel('Magnitude of receivde bits');
+ylabel('Occurrence probability');
+title('Data Error Distribution');
+legend('Measured', 'Theoretical');
+set(gca, 'Fontsize', 20, 'Linewidth', 2);
+hold off
+
+pwrNoiseUnit = 2 * sigmaN^2;
+pwrNoise = 10 * log10(pwrNoiseUnit*1000);
+pwrMsbUnit = Ps;
+pwrMsb = 10 * log10(pwrMsbUnit*1000);
+textSysParam = ['$Np=', num2str(Np), ',\quad ', 'P_N=', ...
+    num2str(pwrNoise), '\ dBm\ (', num2str(pwrNoiseUnit), 'W),\quad ', ...
+    'P_{TX}=', num2str(pwrMsb), '\ dBm\ (', num2str(pwrMsbUnit), ...
+    'W)$'];
+
+% Data error distribution figure settings
+dataErrPlt = figure(2);
+dataErrPlt.Name = 'Transmission Data Error for AWGN channel with BPSK Modulation';
+dataErrPlt.WindowState = 'maximized';
+% Plot data error distribution (Measured)
+histogram(dataErr, 2^(Np + 1), 'Normalization', 'probability',...
+    'BinMethod', 'integers');
+title('\bf Data Error Distribution (AWGN Channel, BPSK)', textSysParam, ...
+    'Interpreter', 'latex', 'FontName', 'Times New Roman');
+xlabel('\bf Data Error Value', 'Interpreter', 'latex', 'FontName', 'Times New Roman');
+ylabel('\bf PDF', 'Interpreter', 'latex', 'FontName', 'Times New Roman');
+set(gca, 'Fontsize', 20);
+
+% Data error distribution figure settings
+pwrAlloPlt = figure(3);
+pwrAlloPlt.Name = 'Transmission Power Allocation for AWGN channel with BPSK Modulation';
+pwrAlloPlt.WindowState = 'maximized';
+% Plot transmit power variation
+txPwrLog = 10 * log10(txPwr * 1000);
+plot(txPwrLog(1 : 10 * Np), 'Color', '#D95319', 'LineWidth', 2);
+title('\bf Transmission Power Variation (AWGN Channel, BPSK)', textSysParam, ...
+    'Interpreter', 'latex', 'FontName', 'Times New Roman');
+xlabel('\bf Bit index', 'Interpreter', 'latex', 'FontName', 'Times New Roman');
+ylabel('\bf Power (dBm)', 'Interpreter', 'latex', 'FontName', 'Times New Roman');
+set(gca, 'Fontsize', 20, 'Linewidth', 2);
 
 
-%% Write Data into File
-% 
-% dataWrite = [Np, EbNo, bLap];
-% writematrix
 

@@ -40,8 +40,8 @@ EbNo = 10*log(ebnoUnit);
 % Transimitter gain (Take MSB for reference bit)
 idxNp = (Np : -1 : 1).';
 gRatio = exp(idxNp - Np);
-Gt = gRatio * Gstd;                         % Transmit gain of ith bit in a pack
-pwrSig = Gt.^2;                             % Transmit power of ith bit in a pack
+txGain = gRatio * Gstd;                     % Transmit gain of ith bit in a pack
+pwrSig = txGain.^2;                         % Transmit power of ith bit in a pack
 
 
 %% Calculate Some Theoretical Values

@@ -1,7 +1,7 @@
-function pn = TheorDataErrorDistri(Np, EbNo)
+function pn = TheorDataErrorDistri(Np, ebnoUnit, channel)
 % 
 % Calculate theoretical data error distribution
-% Used for BPSK modulation, Rayleigh fading channel
+% Used for BPSK modulation
 % A theiretical BER calculation function is defined in the end
 % 
 % Author:  Zhiyu Shen
@@ -9,8 +9,12 @@ function pn = TheorDataErrorDistri(Np, EbNo)
 % Project: Channel Modeling - iSure 2022
 %
 % Input Argument:
-%   @Np:   Number of bits in a pack
-%   @EbNo: Eb/N0 for MSB (dB)
+%   @Np      : Number of bits in a pack
+%   @ebnoUnit: Eb/N0 for each bit
+%   @channel : Type of channel model
+%                0: AWGN channel
+%                1: Rayleigh fading channel
+%                ......
 % 
 % Output Argument:
 %   @pn: Theoretical probability dencity function of data error
@@ -18,17 +22,8 @@ function pn = TheorDataErrorDistri(Np, EbNo)
 
 %%% Calculate theoretical BER for each bit
 
-% Calculate transmission power ratio for each bit
-idxNp = (Np : -1 : 1).';
-% txPwrRat = (2.^(idxNp - Np)).^2;            % Ratio of transmission power
-txPwrRat = (exp(idxNp - Np)).^2;
-
-% Calculate true Eb/N0 for each bit
-rou = 10^(EbNo/10);                         % Eb/N0 of MSB in units of 1
-trueEbN0 = rou * txPwrRat;                  % Actual Eb/N0 for each bit
-
 % Calculate theoretical BER for each bit
-pe = BERFun(trueEbN0);
+pe = BerFun(ebnoUnit, channel);
 
 
 %%% Calculate data error ditribution according to recurrence formula
@@ -40,7 +35,7 @@ fn = zeros(Nerr, 1);
 fn(1) = pe(Np)/2;
 fn(2) = 1-pe(Np);
 fn(3) = fn(1);
-zeroIdx = 2^(k+1);                          % Index of zero dat error point
+zeroIdx = 2^(k+1);                              % Index of zero dat error point
     
 % Calculate data error ditribution according to recurrence formula
 % fn represents PDF of data error when pack size is k
@@ -73,18 +68,28 @@ pn = gn;
 end
 
 
-function theorBER = BERFun(EbNo)
+function theorBER = BerFun(EbNo, channel)
 % 
 % Calculate theoretical BER according to Eb/N0
-% BPSK modulation, Rayleigh fading channel
+% BPSK modulation
 %
 % Input Argument:
-%   @Eb_N0: Eb/N0 for each bit
+%   @Eb_N0  : Eb/N0 for each bit
+%   @Channel: Type of channel model
+%               0: AWGN channel
+%               1: Rayleigh fading channel
+%               ......
 % 
 % Output Argument:
 %   @theorBER: Theoretical BER for each bit
 %
 
-theorBER = 0.5 * (1 - sqrt(EbNo ./ (1 + EbNo)));
+% AWGN channel
+if channel == 0
+    theorBER = qfunc(sqrt(2*EbNo));
+% Rayleigh fading channel
+elseif channel == 1
+    theorBER = 0.5 * (1- sqrt(EbNo./(1+EbNo)));
+end
 
 end
