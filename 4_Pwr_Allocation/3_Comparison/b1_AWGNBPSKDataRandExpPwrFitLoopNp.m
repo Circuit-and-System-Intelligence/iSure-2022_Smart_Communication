@@ -128,30 +128,29 @@ end
 %% Plot
 
 distriPlt = figure(1);
+distriPlt.Name = "Relationship between Np and Laplace Fit's Parameter 'b' (AWGN Channel)";
 distriPlt.WindowState = 'maximized';
-
-titleSysParam = ['\it\fontname{Times New Roman}', 'Noise power = ', ...
-    num2str(pwrNoise), ' dBm (', num2str(pwrNoiseUnit), ' W), ', 'Transmit power of MSB = ', ...
-    num2str(pwrMsb), ' dBm (', num2str(pwrMsbUnit), ' W)', '\fontname{Times New Roman}\rm'];
-textStr = ['\it\fontname{Times New Roman}b = ', num2str(bLap), '\fontname{Times New Roman}\rm'];
 
 % Plot relationship between Np and original b
 subplot(2, 1, 1);
 hold on
 plot(Np, bLapTheo, 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
-
+plot(Np, bLapMeas, 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
+hold off
 % Set the plotting properties
-title("Relationship between Np and Laplace Fit's Parameter 'b' (AWGN Channel)", titleSysParam);
-xlabel("Np (Number of bit in a pack)");
-ylabel("b");
+xlabel("$N_p$", "Interpreter", "latex");
+ylabel("$b$", "Interpreter", "latex");
 set(gca, 'Fontsize', 20);
 
 % Plot relationship between Np and logrithmatic value of b
 subplot(2, 1, 2);
-plot(Np, log(bLap), 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '*', 'MarkerSize', 8);
+hold on
+plot(Np, log(bLapTheo), 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
+plot(Np, log(bLapMeas), 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
+hold off
 % Set the plotting properties
-xlabel("Np (Number of bit in a pack)");
-ylabel("ln(b)");
+xlabel("$N_p$", "Interpreter", "latex");
+ylabel("$\mathrm{ln}(b)$", "Interpreter", "latex");
 set(gca, 'Fontsize', 20);
 
 
