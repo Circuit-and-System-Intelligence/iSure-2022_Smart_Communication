@@ -1,4 +1,4 @@
-% Description:  Laplace fit of theoretical data error PDF (Changing Np)
+% Description:  Laplace fit of theoretical data error PDF (Changing Signal Power)
 % Projet:       Channel Modeling - iSure 2022
 % Date:         Sept 26, 2022
 % Author:       Zhiyu Shen
@@ -18,6 +18,7 @@ close all
 % Define baseband parameters
 bitrate = 100000;                           % Bitrate (Hz)
 Fs = bitrate;                               % Sampling rate (Hz)
+Np = 16;                                     % Number of bits in a pack
 M = 2;                                      % Modulation order
 Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
 sps = Fs / Fsym;                            % Samples per symbol
@@ -25,42 +26,43 @@ Feq = Fs / log2(M);                         % Equivalent sampling rate for symbo
 
 % Define wireless communication environment parameters
 
-% Signal power
+% Noise power
 pwrNoise = 30;                              % Noise power (dBm)
 pwrNoiseUnit = 10.^(pwrNoise./10-3);        % Noise power (W)
-pwrMsb = 30;                                % MSB transmit power (dBm)
+
+% Signal power
+pwrMsb = 20 : 0.5 : 40;                     % MSB transmit power (dBm)
 pwrMsbUnit = 10.^(pwrMsb./10-3);            % MSB transmit power (W)
+numPwr = length(pwrMsb);
 Gstd = sqrt(pwrMsbUnit);
 
 % Signal-to-noise ratio
 ebnoMsbUnit = (pwrMsbUnit/pwrNoiseUnit)*(Fs/bitrate);
-ebnoMsb = 20*log10(ebnoMsbUnit);
+ebnoMsb = 20.*log10(ebnoMsbUnit);
 
 
 %% Loop of Varying Np
 
-Np = 3 : 16;
-numNp = length(Np);
-bLapTheo = zeros(1, numNp);
-bLapMeas = zeros(1, numNp);
-for i = 1 : numNp
+bLapTheo = zeros(1, numPwr);
+bLapMeas = zeros(1, numPwr);
+for i = 1 : numPwr
     
     % Transimitter gain (Take MSB for reference bit)
-    idxNp = (Np(i) : -1 : 1).';
-    gRatio = exp(idxNp - Np(i));
-    txGain = gRatio * Gstd;                         % Transmit gain of ith bit in a pack
+    idxNp = (Np : -1 : 1).';
+    gRatio = exp(idxNp - Np);
+    txGain = gRatio * Gstd(i);                      % Transmit gain of ith bit in a pack
     
     % Generate sending data (Decimal)
     numData = 1000000;                              % Number of sending datas (Decimalism)
-    dataSend = randi([0, 2^Np(i)-1], 1, numData);   % Sending data (Decimal)
+    dataSend = randi([0, 2^Np-1], 1, numData);      % Sending data (Decimal)
     
     % Convert decimal numbers into binary sequence (1st: MSb -> last: LSB)
-    numBit = numData * Np(i);                       % Number of bits
-    txVec = zeros(Np(i), numData);
+    numBit = numData * Np;                          % Number of bits
+    txVec = zeros(Np, numData);
     txSeqRes = dataSend;
-    for j = 1 : Np(i)
-        txVec(j, :) = fix(txSeqRes / 2^(Np(i) - j));
-        txSeqRes = txSeqRes - txVec(j, :) * 2^(Np(i) - j);
+    for j = 1 : Np
+        txVec(j, :) = fix(txSeqRes / 2^(Np - j));
+        txSeqRes = txSeqRes - txVec(j, :) * 2^(Np - j);
     end
     txSeq = reshape(txVec, 1, numBit);          % Binary sending sequence (0 and 1 seq)
        
@@ -70,8 +72,8 @@ for i = 1 : numNp
     
     % Adjust Transmission Power According to Bit Order
     txBbSig = zeros(1, numBit);
-    for j = 1 : Np(i)
-        idxPack = j : Np(i) : numBit;           % Index of ith bit in a pack
+    for j = 1 : Np
+        idxPack = j : Np : numBit;              % Index of ith bit in a pack
         txBbSig(idxPack) = txGain(j) * txModSig(idxPack);
     end
 
@@ -83,19 +85,19 @@ for i = 1 : numNp
     rxBbSig = real(txBbSig + chanNoise);
 
     % Demodulation and Detection
-    rxDemTemp = reshape(rxBbSig, Np(i), numData);
+    rxDemTemp = reshape(rxBbSig, Np, numData);
     rxVecTemp = rxDemTemp ./ abs(rxDemTemp);
     rxVec = (rxVecTemp + 1) / 2;
     
     % Recover Sequence
-    recVecIdx = 2.^(Np(i) - 1 : -1 : 0);
+    recVecIdx = 2.^(Np - 1 : -1 : 0);
     dataRecv = recVecIdx * rxVec;
     
     % Compute Error
     bitErrTemp = rxVec - txVec;
-    bitErrNum = zeros(Np(i), 1);
-    measBER = ones(Np(i), 1);
-    for j = 1 : Np(i)
+    bitErrNum = zeros(Np, 1);
+    measBER = ones(Np, 1);
+    for j = 1 : Np
         for k = 1 : numData
             if bitErrTemp(j, k) ~= 0
                 bitErrNum(j) = bitErrNum(j) + 1;
@@ -106,10 +108,10 @@ for i = 1 : numNp
     dataErr = dataRecv - dataSend;
     
     % Calculate measured data error distribution
-    Mn = FreqCal(dataErr, Np(i));
+    Mn = FreqCal(dataErr, Np);
     
     % Calculate the actual theoretical BER for each bit
-    trueEbnoUnit = ebnoMsbUnit * gRatio.^2;
+    trueEbnoUnit = ebnoMsbUnit(i) * gRatio.^2;
     trueEbno = 20 * log10(trueEbnoUnit);
     theoBER = qfunc(sqrt(2*trueEbnoUnit));
     
@@ -118,10 +120,43 @@ for i = 1 : numNp
     bLapTheo(i) = 1 / (2*tnZero);
     
     % Laplace fit of measured data error distribution
-    [~, ~, ~, bLapMeas(i)] = LaplaceFit(dataErr, Np(i));
+    [~, ~, ~, bLapMeas(i)] = LaplaceFit(dataErr, Np);
 
 
 end
+
+
+% %% Plot
+% 
+% % Plot relationship between Np and original b
+% originPlt = figure(1);
+% originPlt.Name = "Relationship between Np and Laplace Fit's Parameter 'b' (AWGN Channel)";
+% originPlt.WindowState = 'maximized';
+% % Plot curve
+% hold on
+% plot(pwrMsb, bLapTheo, 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
+% plot(pwrMsb, bLapMeas, 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
+% hold off
+% % Set the plotting properties
+% xlabel("$P_S$ (dBm)", "Interpreter", "latex");
+% ylabel("$b$", "Interpreter", "latex");
+% legend('Calculated by Theoretical BER', 'Calculated by Measured BER');
+% set(gca, 'Fontsize', 20);
+% 
+% % Plot relationship between Np and logrithmatic value of b
+% logPlt = figure(2);
+% logPlt.Name = "Relationship between Np and Laplace Fit's Parameter 'b' (AWGN Channel)";
+% logPlt.WindowState = 'maximized';
+% % Plot curve
+% hold on
+% plot(pwrMsb, log(bLapTheo), 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
+% plot(pwrMsb, log(bLapMeas), 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
+% hold off
+% % Set the plotting properties
+% xlabel("$P_S$ (dBm)", "Interpreter", "latex");
+% ylabel("$\mathrm{ln}(b)$", "Interpreter", "latex");
+% legend('Calculated by Theoretical BER', 'Calculated by Measured BER');
+% set(gca, 'Fontsize', 20);
 
 
 %% Plot
@@ -132,14 +167,14 @@ originPlt.Name = "Relationship between Np and Laplace Fit's Parameter 'b' (AWGN 
 originPlt.WindowState = 'maximized';
 % Plot curve
 hold on
-plot(Np, bLapTheo, 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
-plot(Np, bLapMeas, 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
+plot(pwrMsbUnit, bLapTheo, 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
+plot(pwrMsbUnit, bLapMeas, 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
 hold off
 % Set the plotting properties
-xlabel("$N_p$", "Interpreter", "latex");
+xlabel("$P_S$ (W)", "Interpreter", "latex");
 ylabel("$b$", "Interpreter", "latex");
 legend('Calculated by Theoretical BER', 'Calculated by Measured BER');
-set(gca, 'Fontsize', 24);
+set(gca, 'Fontsize', 20);
 
 % Plot relationship between Np and logrithmatic value of b
 logPlt = figure(2);
@@ -147,11 +182,11 @@ logPlt.Name = "Relationship between Np and Laplace Fit's Parameter 'b' (AWGN Cha
 logPlt.WindowState = 'maximized';
 % Plot curve
 hold on
-plot(Np, log(bLapTheo), 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
-plot(Np, log(bLapMeas), 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
+plot(pwrMsbUnit, log(bLapTheo), 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
+plot(pwrMsbUnit, log(bLapMeas), 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
 hold off
 % Set the plotting properties
-xlabel("$N_p$", "Interpreter", "latex");
+xlabel("$P_S$ (W)", "Interpreter", "latex");
 ylabel("$\mathrm{ln}(b)$", "Interpreter", "latex");
 legend('Calculated by Theoretical BER', 'Calculated by Measured BER');
 set(gca, 'Fontsize', 20);
@@ -165,8 +200,6 @@ fprintf('Bit Error Gaussian Distributed\n')
 
 fprintf('\n---------- Environment Information ----------\n');
 fprintf('Complex noise power for bits = %.2f W\n', pwrNoiseUnit);
-fprintf('Tramsmit power of MSB = %.2f W\n', pwrMsbUnit);
-fprintf('Eb/N0 of MSB = %.2f dB, i.e. %.2f\n', ebnoMsb, ebnoMsbUnit);
 
 fprintf('\n----------- Transmission Settings -----------\n');
 fprintf('Bitrate = %d Hz\n', bitrate);
