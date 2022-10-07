@@ -19,7 +19,7 @@ function [Ln, Idx, mu, b] = LaplaceFit(X, Np)
 
 % Estimate distribution parameter
 N = length(X);                                              % Length of sequence
-mu = sum(X) / N;                                            % Estimate distribution's mean
+mu = median(X);                                             % Estimate distribution's mean
 
 b = sum(abs(X-mu)) / N;                                     % Estimate distribution's standard deviation
 % Idx = mu + linspace(-2^Np+1, 2^Np-1, 1000);                 % Generate xprim vector

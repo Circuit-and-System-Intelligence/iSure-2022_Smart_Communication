@@ -89,7 +89,7 @@ if channel == 0
     theorBER = qfunc(sqrt(2*EbNo));
 % Rayleigh fading channel
 elseif channel == 1
-    theorBER = 0.5 * (1- sqrt(EbNo./(1+EbNo)));
+    theorBER = 0.5 * (1- sqrt(EbNo./(2+EbNo)));
 end
 
 end

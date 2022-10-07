@@ -42,7 +42,7 @@ Gstd = sqrt(pwrMsbUnit);
 
 % Signal-to-noise ratio
 ebnoMsbUnit = (pwrMsbUnit/pwrNoiseUnit)*(Fs/bitrate);
-ebnoMsb = 10*log(ebnoMsbUnit);
+ebnoMsb = 20*log10(ebnoMsbUnit);
 
 % Transimitter gain (Take MSB for reference bit)
 idxNp = (Np : -1 : 1).';
@@ -71,15 +71,15 @@ txSeq = reshape(txVec, 1, numBits);          % Binary sending sequence (0 and 1 
 %% Baseband Modulation
 
 % BPSK baeband modulation (No phase rotation)
-txModSig = 2 * (txSeq-0.5) * Gstd;
+txModSig = 2 * (txSeq-0.5);
 baseLen = length(txModSig);
 
 
 %% Adjust Transmission Power According to Bit Order
 
-txBbSig = zeros(1, numBits);
+txBbSig = zeros(1, baseLen);
 for i = 1 : Np
-    idxPack = i : Np : numBits;              % Index of ith bit in a pack
+    idxPack = i : Np : baseLen;              % Index of ith bit in a pack
     txBbSig(idxPack) = txGain(i) * txModSig(idxPack);
 end
 txPwr = abs(txBbSig.^2);
@@ -87,7 +87,7 @@ txPwr = abs(txBbSig.^2);
 
 %% Go through Rayleigh Fading Channel
 
-h0 = RayleighFadingChannel(Nw, fm, numBits, Feq, t0, phiN);
+h0 = RayleighFadingChannel(Nw, fm, baseLen, Feq, t0, phiN);
 txChanSig = txBbSig .* h0;
 
 
@@ -147,7 +147,7 @@ Mn = FreqCal(dataErr, Np).';
 % Calculate the actual theoretical BER for each bit
 trueEbnoUnit = ebnoMsbUnit * gRatio.^2;
 trueEbno = 20 * log10(trueEbnoUnit);
-theorBER = 0.5 * (1-sqrt(trueEbnoUnit./(1+trueEbnoUnit)));
+theorBER = 0.5 * (1-sqrt(trueEbnoUnit./(2+trueEbnoUnit)));
 
 % Calculate theoretical data error distribution
 Tn = TheorDataErrorDistri(Np, trueEbnoUnit, 1);
@@ -216,6 +216,7 @@ fprintf('Measured b = %.3f\n', bLapMeas);
 % textJakes = '\it Construct Rayleigh fading channel with Jakes model';
 
 numBitsDisp = 40;
+maxYpos = max(Tn(2^Np), Mn(2^Np)) * 1.2;
 
 % Theoretical data error distribution figure settings
 dataErrPlt = figure(1);
@@ -224,11 +225,13 @@ dataErrPlt.WindowState = 'maximized';
 % Plot data error distribution (Theoretical)
 hold on
 stem(Xn, Tn, 'LineWidth', 2.5, 'Color', '#0072BD');
-plot(Xn, tnFit, 'LineWidth', 2, 'Color', '#D95319')
+plot(Xn, tnFit, 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*');
 hold off
 xlabel('\bf Data Error Value', 'Interpreter', 'latex', 'FontName', ...
     'Times New Roman');
 ylabel('\bf PDF', 'Interpreter', 'latex', 'FontName', 'Times New Roman');
+ylim([0 maxYpos]);
+legend('Theoretical Data Error PDF', 'Theoretical Laplace Fit');
 set(gca, 'Fontsize', 24);
 
 % Measure data error distribution figure settings
@@ -238,11 +241,14 @@ dataErrPlt.WindowState = 'maximized';
 % Plot data error distribution (Measured)
 hold on
 stem(Xn, Mn, 'LineWidth', 2.5, 'Color', '#0072BD');
-plot(IdxMnFit, mnFit, 'LineWidth', 2, 'Color', '#D95319')
+plot(Xn, tnFit, 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*');
+plot(IdxMnFit, mnFit, 'LineWidth', 2, 'Color', '#77AC30', 'Marker', 'o');
 hold off
 xlabel('\bf Data Error Value', 'Interpreter', 'latex', 'FontName', ...
     'Times New Roman');
 ylabel('\bf PDF', 'Interpreter', 'latex', 'FontName', 'Times New Roman');
+ylim([0 maxYpos]);
+legend('Measured Data Error PDF', 'Theoretical Laplace Fit', 'Measured Laplace Fit');
 set(gca, 'Fontsize', 24);
 
 % Transmit power variation figure settings

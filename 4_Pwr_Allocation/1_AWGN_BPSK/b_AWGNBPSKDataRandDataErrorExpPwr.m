@@ -65,7 +65,7 @@ txSeq = reshape(txVec, 1, numBit);          % Binary sending sequence (0 and 1 s
 %% Baseband Modulation
 
 % BPSK baeband modulation (No phase rotation)
-txModSig = 2 * (txSeq - 0.5) * Gstd;
+txModSig = 2 * (txSeq - 0.5);
 baseLen = length(txModSig);
 
 
@@ -138,6 +138,7 @@ theorBER = qfunc(sqrt(2*trueEbnoUnit));
 Tn = TheorDataErrorDistri(Np, trueEbnoUnit, 0);
 
 % Fit the theoretical PDF into Laplace distribution with point of zero
+muLapTheo = 0;
 bLapTheo = 1 / (2*Tn(2^Np));
 tnFit = 1/(2*bLapTheo) * exp(-abs(Xn)/bLapTheo);
 
@@ -206,14 +207,14 @@ dataErrPlt.Name = 'Theoretical Data Error Distribution (AWGN Channel, BPSK)';
 dataErrPlt.WindowState = 'maximized';
 % Plot data error distribution and its Laplace fit (Theoretical)
 hold on
-stem(Xn, Mn, 'LineWidth', 2.5, 'Color', '#0072BD');
-plot(Xn, tnFit, 'LineWidth', 2, 'Color', '#D95319')
+stem(Xn, Tn, 'LineWidth', 2.5, 'Color', '#0072BD');
+plot(Xn, tnFit, 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*');
 hold off
 xlabel('\bf Data Error Value', 'Interpreter', 'latex', 'FontName', ...
     'Times New Roman');
 ylabel('\bf PDF', 'Interpreter', 'latex', 'FontName', 'Times New Roman');
 ylim([0 max(Mn)*1.2]);
-legend('Measured Data Error PDF', 'Laplace Fit');
+legend('Theoretical Data Error PDF', 'Theoretical Laplace Fit');
 set(gca, 'Fontsize', 24);
 
 % Measure data error distribution figure settings
@@ -222,14 +223,15 @@ dataErrPlt.Name = 'Measured Data Error Distribution (AWGN Channel, BPSK)';
 dataErrPlt.WindowState = 'maximized';
 % Plot data error distribution and its Laplace fit (Measured)
 hold on
-stem(Xn, Tn, 'LineWidth', 2.5, 'Color', '#0072BD');
-plot(Xn, tnFit, 'LineWidth', 2, 'Color', '#D95319')
+stem(Xn, Mn, 'LineWidth', 2.5, 'Color', '#0072BD');
+plot(Xn, tnFit, 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*');
+plot(IdxMnFit, mnFit, 'LineWidth', 2, 'Color', '#77AC30', 'Marker', 'o');
 hold off
 xlabel('\bf Data Error Value', 'Interpreter', 'latex', 'FontName', ...
     'Times New Roman');
 ylabel('\bf PDF', 'Interpreter', 'latex', 'FontName', 'Times New Roman');
 ylim([0 max(Mn)*1.2]);
-legend('Theoretical Data Error PDF', 'Laplace Fit');
+legend('Measured Data Error PDF', 'Theoretical Laplace Fit', 'Measured Laplace Fit');
 set(gca, 'Fontsize', 24);
 
 % Transmit power variation figure settings

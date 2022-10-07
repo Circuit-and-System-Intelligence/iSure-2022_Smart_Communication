@@ -137,7 +137,7 @@ Xn = -2^Np + 1 : 1 : 2^Np - 1;
 Mn = FreqCal(dataErr, Np);                                        % Calculate the frequence of each error (Normalized)
 
 % Calculate theoretical data error distribution
-Tn = TheorDataErrorDistri(Np, EbNo);
+Tn = TheorDataErrorDistri(Np, EbNo, 0);
 
 % Laplace fit of measured data error distribution
 [Lnm, IdxLnm, muLap, bLap] = LaplaceFit(dataErr, Np);

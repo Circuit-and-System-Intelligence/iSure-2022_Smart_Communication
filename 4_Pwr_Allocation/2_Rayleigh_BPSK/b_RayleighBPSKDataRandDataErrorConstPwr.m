@@ -71,7 +71,7 @@ txSeq = reshape(txVec, 1, numBits);          % Binary sending sequence (0 and 1 
 %% Baseband Modulation
 
 % BPSK baeband modulation (No phase rotation)
-txModSig = 2 * (txSeq-0.5) * Gstd;
+txModSig = 2 * (txSeq-0.5);
 baseLen = length(txModSig);
 
 
