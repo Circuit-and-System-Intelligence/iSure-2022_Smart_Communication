@@ -4,7 +4,7 @@
 % Author:       Zhiyu Shen
 
 % Additional Description:
-%   AWGN channel, BPSK modulation
+%   Rayleigh fading channel, BPSK modulation
 %   Transmit random data uniformly distributted
 %   Allocate transmission power in a exponential way
 
@@ -18,13 +18,19 @@ close all
 % Define baseband parameters
 bitrate = 100000;                           % Bitrate (Hz)
 Fs = bitrate;                               % Sampling rate (Hz)
-Np = 16;                                     % Number of bits in a pack
+Np = 4;                                     % Number of bits in a pack
 M = 2;                                      % Modulation order
 Fsym = bitrate / log2(M);                   % Symbol rate (Hz)
 sps = Fs / Fsym;                            % Samples per symbol
 Feq = Fs / log2(M);                         % Equivalent sampling rate for symbols (Hz)
 
 % Define wireless communication environment parameters
+
+% Small-Scale fading
+Nw = 98;                                    % Number of scattered plane waves arriving at the receiver
+fm = 50;                                    % Maximum doppler shift (Hz)
+t0 = 0;                                     % Initial time (s)
+phiN = 0;                                   % Initial phase of signal with maximum doppler shift (rad)
 
 % Noise power
 pwrNoise = 30;                              % Noise power (dBm)
@@ -77,13 +83,20 @@ for i = 1 : numPwr
         txBbSig(idxPack) = txGain(j) * txModSig(idxPack);
     end
 
+    % Go through Rayleigh Fading Channel
+    h0 = RayleighFadingChannel(Nw, fm, baseLen, Feq, t0, phiN);
+    txChanSig = txBbSig .* h0;
+
     % Generate gaussian white noise
     sigmaN = sqrt(pwrNoiseUnit/2);
     chanNoise = sigmaN*randn(1, baseLen) + 1i*sigmaN*randn(1, baseLen);
     
     % Signal goes through channel and add noise
-    rxBbSig = real(txBbSig + chanNoise);
-
+    rxChanSig = real(txChanSig + chanNoise);
+    
+    % Eliminate the effect of fading channel
+    rxBbSig = real(rxChanSig ./ h0);
+    
     % Demodulation and Detection
     rxDemTemp = reshape(rxBbSig, Np, numData);
     rxVecTemp = rxDemTemp ./ abs(rxDemTemp);
@@ -128,29 +141,14 @@ end
 
 %% Plot
 
-% Plot relationship between Np and original b
+% Plot relationship between Ps(dBm) and original b
 originPlt = figure(1);
-originPlt.Name = "Relationship between Np and Laplace Fit's Parameter 'b' (AWGN Channel)";
+originPlt.Name = "Relationship between Np and Laplace Fit's Parameter 'b' (Rayleigh Fading Channel)";
 originPlt.WindowState = 'maximized';
 % Plot curve
 hold on
-plot(pwrMsb, bLapTheo, 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
-plot(pwrMsb, bLapMeas, 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
-hold off
-% Set the plotting properties
-xlabel("$P_S$ (dBm)", "Interpreter", "latex");
-ylabel("$b$", "Interpreter", "latex");
-legend('Calculated by Theoretical BER', 'Calculated by Measured BER');
-set(gca, 'Fontsize', 20);
-
-% Plot relationship between Np and logrithmatic value of b
-logPlt = figure(2);
-logPlt.Name = "Relationship between Np and Laplace Fit's Parameter 'b' (AWGN Channel)";
-logPlt.WindowState = 'maximized';
-% Plot curve
-hold on
-plot(pwrMsb, log10(bLapTheo), 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
-plot(pwrMsb, log10(bLapMeas), 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
+plot(pwrMsb, log(bLapTheo), 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
+plot(pwrMsb, log(bLapMeas), 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
 hold off
 % Set the plotting properties
 xlabel("$P_S$ (dBm)", "Interpreter", "latex");
@@ -158,43 +156,25 @@ ylabel("$\mathrm{ln}(b)$", "Interpreter", "latex");
 legend('Calculated by Theoretical BER', 'Calculated by Measured BER');
 set(gca, 'Fontsize', 20);
 
-
-% %% Plot
-% 
-% % Plot relationship between Np and original b
-% originPlt = figure(1);
-% originPlt.Name = "Relationship between Np and Laplace Fit's Parameter 'b' (AWGN Channel)";
-% originPlt.WindowState = 'maximized';
-% % Plot curve
-% hold on
-% plot(pwrMsbUnit, bLapTheo, 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
-% plot(pwrMsbUnit, bLapMeas, 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
-% hold off
-% % Set the plotting properties
-% xlabel("$P_S$ (W)", "Interpreter", "latex");
-% ylabel("$b$", "Interpreter", "latex");
-% legend('Calculated by Theoretical BER', 'Calculated by Measured BER');
-% set(gca, 'Fontsize', 20);
-% 
-% % Plot relationship between Np and logrithmatic value of b
-% logPlt = figure(2);
-% logPlt.Name = "Relationship between Np and Laplace Fit's Parameter 'b' (AWGN Channel)";
-% logPlt.WindowState = 'maximized';
-% % Plot curve
-% hold on
-% plot(pwrMsbUnit, log(bLapTheo), 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
-% plot(pwrMsbUnit, log(bLapMeas), 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
-% hold off
-% % Set the plotting properties
-% xlabel("$P_S$ (W)", "Interpreter", "latex");
-% ylabel("$\mathrm{ln}(b)$", "Interpreter", "latex");
-% legend('Calculated by Theoretical BER', 'Calculated by Measured BER');
-% set(gca, 'Fontsize', 20);
+% Plot relationship between Ps(W) and logrithmatic value of b
+logPlt = figure(2);
+logPlt.Name = "Relationship between Np and Laplace Fit's Parameter 'b' (AWGN Channel)";
+logPlt.WindowState = 'maximized';
+% Plot curve
+hold on
+plot(pwrMsbUnit, bLapTheo, 'LineWidth', 2, 'Color', '#D95319', 'Marker', '*', 'MarkerSize', 8);
+plot(pwrMsbUnit, bLapMeas, 'LineWidth', 2, 'Color', '#0072BD', 'Marker', '+', 'MarkerSize', 8);
+hold off
+% Set the plotting properties
+xlabel("$P_S$ (W)", "Interpreter", "latex");
+ylabel("$b$", "Interpreter", "latex");
+legend('Calculated by Theoretical BER', 'Calculated by Measured BER');
+set(gca, 'Fontsize', 20);
 
 
 %% Print Transmission Information
 
-fprintf('AWGN Channel, BPSK Mdulation\n');
+fprintf('Rayleigh Fading Channel, BPSK Mdulation\n');
 fprintf('Baseband Equivalent\n');
 fprintf('Bit Error Gaussian Distributed\n')
 

@@ -36,7 +36,7 @@ phiN = 0;                                   % Initial phase of signal with maxim
 % Signal power
 pwrNoise = 30;                              % Noise power (dBm)
 pwrNoiseUnit = 10.^(pwrNoise./10-3);        % Noise power (W)
-pwrMsb = 30;                                % MSB transmit power (dBm)
+pwrMsb = 20;                                % MSB transmit power (dBm)
 pwrMsbUnit = 10.^(pwrMsb./10-3);            % MSB transmit power (W)
 Gstd = sqrt(pwrMsbUnit);
 
