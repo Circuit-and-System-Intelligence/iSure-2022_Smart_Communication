@@ -2,8 +2,8 @@
 
 Project: A Differential Privacy Encrypted Communication Method based on Transmit Power Allocation
 
-All codes are available in the folders
+A documentation on the project is also uploaded: https://drive.google.com/file/d/116uQYHowBWR_4bZv-VNHEx9qDf9uJ8cH/view?usp=sharing
 
-A documentation on the project is also uploaded: https://github.com/Circuit-and-System-Intelligence/iSure-2022_Smart_Communication/blob/main/A_Differential_Privacy_Encrypted_Communication_Method_Based_on_Transmit_Power_Allocation-Zhiyu_Shen.pdf
+All codes are available in the folders
 
 Contributor: Zhiyu Shen
