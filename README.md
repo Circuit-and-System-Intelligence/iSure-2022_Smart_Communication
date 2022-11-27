@@ -14,12 +14,21 @@ A research report on the project tracing current progress is available:
 
 ## 2	Guidance
 
-1) [Folder 0](https://github.com/Circuit-and-System-Intelligence/iSure-2022_Smart_Communication/tree/main/0_Documentations) stores the documents on basic knowledge and relevant derivation written by the researcher in carrying out the project.
-2) [Folder 1](https://github.com/Circuit-and-System-Intelligence/iSure-2022_Smart_Communication/tree/main/1_Channel-Modeling) covers the code for channel modeling used in this project: 
-3) Folder 2 stores the codes computing Pearson Correlation Coefficients.
-4) Folder 3 covers some of the conventional estimation method.
-5) Folder 4 stores the codes for testing the Joint Estimator.
-6) Folder 5 stores the codes for comparison between Joint Estimator and conventional estimation methods.
+1. [Folder 0](https://github.com/Circuit-and-System-Intelligence/iSure-2022_Smart_Communication/tree/main/0_Documentations) stores the documents on basic knowledge and relevant derivation written by the researcher in carrying out the project.
+
+2. [Folder 1](https://github.com/Circuit-and-System-Intelligence/iSure-2022_Smart_Communication/tree/main/1_Channel-Modeling) covers the code for channel modeling used in this project:
+
+   Large scale fading: Okumura-Hata model
+
+   Small scale fading: Rayleigh fading channel model
+
+3. Folder 2 stores the codes computing Pearson Correlation Coefficients.
+
+4. Folder 3 covers some of the conventional estimation method.
+
+5. Folder 4 stores the codes for testing the Joint Estimator.
+
+6. Folder 5 stores the codes for comparison between Joint Estimator and conventional estimation methods.
 
 ## 3	Documentation
 
