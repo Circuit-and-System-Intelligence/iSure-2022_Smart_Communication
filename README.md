@@ -1,4 +1,4 @@
-# README
+# Smart Communication
 
 A research report on the project tracing current progress is available:
 
