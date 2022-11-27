@@ -162,5 +162,3 @@ The autocorrelation function and power spectrum also meet with theoretical ones,
 
 First we add a series of sine wave to the channel model. The test file is named "ChannelModelTestSinu.m"
 
-## 4	QPSK Modulation
-
