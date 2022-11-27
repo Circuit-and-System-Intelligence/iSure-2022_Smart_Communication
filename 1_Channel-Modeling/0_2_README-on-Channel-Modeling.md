@@ -161,4 +161,3 @@ The autocorrelation function and power spectrum also meet with theoretical ones,
 ## 3	Test the Model with Sinusoid
 
 First we add a series of sine wave to the channel model. The test file is named "ChannelModelTestSinu.m"
-
