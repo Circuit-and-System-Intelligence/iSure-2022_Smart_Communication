@@ -10,7 +10,7 @@
 
 ## 2	Guidance
 
-1) Folder 0 stores the code visualizing the optimization problem.
+1) [Folder 0](https://github.com/Circuit-and-System-Intelligence/iSure-2022_Smart_Communication/tree/main/0_Documentations) stores the documents on basic knowledge and relevant derivation written by the researcher in carrying out the project.
 2) Folder 1 covers the basic optimization algorithms applied in this project, including Particle Swarm Optimization and Conjugate Gradient Method.
 3) Folder 2 stores the codes computing Pearson Correlation Coefficients.
 4) Folder 3 covers some of the conventional estimation method.
