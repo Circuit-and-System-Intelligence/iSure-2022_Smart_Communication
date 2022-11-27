@@ -1,5 +1,9 @@
 # README
 
+A research report on the project tracing current progress is available:
+
+[Research Report on Differential Privacy Encrypted Communication Based on Power Allocation](https://github.com/Circuit-and-System-Intelligence/iSure-2022_Smart_Communication/blob/main/diff-privacy-comm-report_zhiyu-shen.pdf)
+
 ## 1	Basic Information
 
 **Project Name:** *A Differential Privacy Encrypted Communication Method Based on Transmit Power Allocation*
