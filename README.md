@@ -22,24 +22,12 @@ A research report on the project tracing current progress is available:
 
    Small scale fading: Rayleigh fading channel model
 
-3. Folder 2 stores the codes computing Pearson Correlation Coefficients.
+3. [Folder 2](https://github.com/Circuit-and-System-Intelligence/iSure-2022_Smart_Communication/tree/main/2_BER-Test) stores the codes testing the BER characteristic of communication systems with channels modeled above.
 
-4. Folder 3 covers some of the conventional estimation method.
+4. [Folder 3](https://github.com/Circuit-and-System-Intelligence/iSure-2022_Smart_Communication/tree/main/3_Add-Noise) covers the codes written to observe the data error distribution under different noise level.
 
-5. Folder 4 stores the codes for testing the Joint Estimator.
-
-6. Folder 5 stores the codes for comparison between Joint Estimator and conventional estimation methods.
+5. [Folder 4](https://github.com/Circuit-and-System-Intelligence/iSure-2022_Smart_Communication/tree/main/4_Power-Allocation) stores the codes for power allocation scheme to achieve differential privacy in communication.
 
 ## 3	Documentation
 
-A documentation on this project will soon be available.
-
-
-
-Project: A Differential Privacy Encrypted Communication Method based on Transmit Power Allocation
-
-**A documentation on the project is available**: https://drive.google.com/file/d/116uQYHowBWR_4bZv-VNHEx9qDf9uJ8cH/view?usp=sharing
-
-All codes are available in the folders
-
-Contributor: Zhiyu Shen
+A research report on this project is available. The link is at the top of this document.
