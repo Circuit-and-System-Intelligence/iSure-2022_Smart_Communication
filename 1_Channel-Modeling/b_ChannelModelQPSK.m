@@ -143,16 +143,16 @@ Feq = Fs / log2(M);                         % Equivalent sampling frequency
 h0 = RayleighFadingChannel(Nw, fm, Ns, Feq, t0, phiN);
 
 % Combined fading channel response
-h = 1 * h0;
+h = E0 * h0;
 
 % Signal goes through channel
-rxChanSig = awgn(txSig .* h, SNR, 'measured');
+rxChanSig = awgn(txSig.*h, SNR, 'measured');
 
 
 %% Receive Signal
 
 % Consider the impact of receive antenna
-rxSig = 10^(Grx / 20) * rxChanSig;
+rxSig = 10^(Grx/20) * rxChanSig;
 
 % Eliminate the effect of Rayleigh fading channel
 % rxBbSig = rxSig;
